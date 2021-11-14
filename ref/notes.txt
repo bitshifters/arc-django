@@ -1,0 +1,61 @@
+Notes
+~~~
+
+Chip Django musicdisk by Rabenauge
+
+Flow:
+Rabenauge splash
+- fades out (decompress?)
+
+Menu screen:
+- Chip Django logo fixed at top
+- Logo glitches (deliberately!) when a new tune is selected
+
+- Menu with 11 entries, fixed
+- First tune begins playing immediately
+- Currently playing tune is in bold (separate font?)
+- Menu selection via mouse
+- Highlighted menu item in a fade
+
+- Note scroller (5 sprites visible - seems random)
+- Raster beat bars behind note scroller
+
+- Text scroller at the bottom
+- Looks like 16x16 font?
+- Scroller has slow & fast speed and can pause
+
+- All tunes are MODs AFAIK
+- All tunes loop, no autoplay (yet)
+- Future disks planned so make it data driven!
+
+Archie Version
+~~~
+MODE 9 should be fine.
+Amiga exe is only 143kb!
+No loading between tracks, so presume all decompressed in RAM.
+Check compression scheme, LZ4 or LHA?
+Use all OS-legal calls to run on as many machines as possible.
+
+Assets needed:
+- MODs!
+- Font redefinition 8x8 (regular & bold)
+- Scroller font and note sprites
+- Logo PNG
+- Scroll text
+
+To dos:
+- Set up new project and strip back
+- (Ignore splash for now - assume this is decompression / easy to add later)
+- Menu screen layout
+    - Top logo
+    - Menu area
+    - Scroll areas
+- Populate menu from data
+- Play a tune from RAM
+- Basic tune selection
+- Text scroller
+- Note scroller
+- Beat rasters
+- Polish effects
+    - Logo glitch
+    - Menu highlights
