@@ -32,6 +32,11 @@
 .equ IKey_RightClick, 0xf4
 .equ IKey_Space, 0x9d
 .equ IKey_Escape, 0x8f
+.equ IKey_ArrowUp, 198
+.equ IKey_ArrowDown, 214
+.equ IKey_ArrowLeft, 230
+.equ IKey_ArrowRight, 134
+.equ IKey_Return, 0xB6
 
 .equ DynArea_Screen, 2
 

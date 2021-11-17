@@ -73,19 +73,12 @@ main:
 	SWI OS_WriteC
 	SWI OS_WriteC
 
-	; LOAD STUFF HERE!
-
-	; Load module
-	mov r0, #0			; load from address
-	adr r2, music_table
-	ldr r1, [r2, #10*4]	; first entry
-	add r1, r1, r2		; MOD data address
-	swi QTM_Load
-
-	mov r0, #48
+	; EARLY INIT / LOAD STUFF HERE!
+	; Set QTM sample quality to maximum as we can afford the CPU time
+	; plus some of the chip tune samples require more fidelity.
+	; TODO: Test how this sounds on real hardware vs emulator.
+	mov r0, #16
 	swi QTM_SetSampleSpeed
-
-	swi QTM_Start
 
 	; Clear all screen buffers
 	mov r1, #1
@@ -129,6 +122,10 @@ main:
 	ldr r1, screen_addr
 	bl unlz4
 
+	; Start with song #0.
+	mov r0, #0
+	bl play_song
+
 	; Enable Vsync event
 	mov r0, #OSByte_EventEnable
 	mov r1, #Event_VSync
@@ -163,16 +160,56 @@ main_loop:
 	bl show_screen_at_vsync
 
 	; exit if Escape is pressed
-	MOV r0, #OSByte_ReadKey
-	MOV r1, #IKey_Escape
-	MOV r2, #0xff
-	SWI OS_Byte
+	mov r1, #IKey_Escape
+	bl check_key
+	beq exit
+
+	; check up
+	mov r1, #IKey_ArrowUp
+	bl check_key
+	bne .2
+
+	ldr r0, selection_number
+	cmp r0, #0
+	beq .2
+	sub r0, r0, #1
+	str r0, selection_number
 	
-	CMP r1, #0xff
-	CMPEQ r2, #0xff
-	BEQ exit
-	
+.2:
+
+	; check down
+	mov r1, #IKey_ArrowDown
+	bl check_key
+	bne .3
+
+	ldr r0, selection_number
+	cmp r0, #MAX_SONGS-1
+	bge .3
+	add r0, r0, #1
+	str r0, selection_number
+
+.3:
+
+	; check return
+	mov r1, #IKey_Return
+	bl check_key
+	bne .4
+
+	ldr r0, selection_number
+	bl play_song
+
+.4:
+
 	b main_loop
+
+; R1=IKey no.
+check_key:
+	mov r0, #OSByte_ReadKey
+	mov r2, #0xff
+	swi OS_Byte
+	cmp r1, #0xff
+	cmpeq r2, #0xff
+	mov pc, lr
 
 error_noscreenmem:
 	.long 0
@@ -181,7 +218,18 @@ error_noscreenmem:
 	.long 0
 
 .if _DEBUG
+debug_print_r0:
+	stmfd sp!, {r0-r2}
+	adr r1, debug_string
+	mov r2, #8
+	swi OS_ConvertHex4
+	adr r0, debug_string
+	swi OS_WriteO
+	ldmfd sp!, {r0-r2}
+	mov pc, lr
+
 debug_write_vsync_count:
+	str lr, [sp, #-4]!
 	mov r0, #30
 	swi OS_WriteC
 
@@ -204,6 +252,15 @@ debug_write_vsync_count:
 	adr r0, debug_string
 	swi OS_WriteO
 
+	swi OS_NewLine
+	ldr r0, song_number
+	bl debug_print_r0
+
+	mov r0, #32
+	swi OS_WriteC
+	ldr r0, selection_number
+	bl debug_print_r0
+
 .if 0
 	; display frame count / frame rate etc.
 	ldr r0, vsync_count	; vsync_delta
@@ -214,7 +271,7 @@ debug_write_vsync_count:
 	adr r0, debug_string
 	swi OS_WriteO
 .endif
-	mov pc, r14
+	ldr pc, [sp], #4
 
 debug_string:
 	.skip 8
@@ -403,6 +460,18 @@ get_next_screen_for_writing:
 	; Back buffer address for writing bank stored at screen_addr
 	b get_screen_addr
 
+play_song:
+	swi QTM_Stop
+	; Load module
+	str r0, song_number
+	adr r2, music_table
+	ldr r1, [r2, r0, lsl #2]	; r0 * 4
+	add r1, r1, r2				; MOD data address
+	mov r0, #0					; load from address
+	swi QTM_Load
+	swi QTM_Start
+	mov pc, lr
+
 ; ============================================================================
 ; Additional code modules
 ; ============================================================================
@@ -414,6 +483,12 @@ get_next_screen_for_writing:
 ; ============================================================================
 ; Data Segment
 ; ============================================================================
+
+song_number:
+	.long -1
+
+selection_number:
+	.long 0
 
 ; TODO: Should be in BSS segment.
 .align 4
