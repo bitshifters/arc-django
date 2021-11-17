@@ -1,9 +1,8 @@
 ; ============================================================================
-; Prototype Framework - stripped back from stniccc-archie.
+; arc-django - An Archimedes port of Chipo Django musicdisk by Rabenauge
 ; ============================================================================
 
 .equ _DEBUG, 1
-.equ _ENABLE_MUSIC, 1
 .equ _FIX_FRAME_RATE, 0					; useful for !DDT breakpoints
 
 .equ Screen_Banks, 1
@@ -17,6 +16,12 @@
 .equ Mode_Bytes, Screen_Stride*Mode_Height
 
 .include "lib/swis.h.asm"
+
+; ============================================================================
+; App defines
+; ============================================================================
+
+.equ MAX_SONGS, 11
 
 .org 0x8000
 
@@ -70,17 +75,17 @@ main:
 
 	; LOAD STUFF HERE!
 
-.if _ENABLE_MUSIC
 	; Load module
-	adrl r0, module_filename
-	mov r1, #0
+	mov r0, #0			; load from address
+	adr r2, music_table
+	ldr r1, [r2, #10*4]	; first entry
+	add r1, r1, r2		; MOD data address
 	swi QTM_Load
 
 	mov r0, #48
 	swi QTM_SetSampleSpeed
 
 	swi QTM_Start
-.endif
 
 	; Clear all screen buffers
 	mov r1, #1
@@ -180,14 +185,12 @@ debug_write_vsync_count:
 	mov r0, #30
 	swi OS_WriteC
 
-.if _ENABLE_MUSIC
-    ; read current tracker position
+    ; display current tracker position
     mov r0, #-1
     mov r1, #-1
     swi QTM_Pos
 
 	mov r3, r1
-
 	adr r1, debug_string
 	mov r2, #8
 	swi OS_ConvertHex2
@@ -200,8 +203,10 @@ debug_write_vsync_count:
 	swi OS_ConvertHex2
 	adr r0, debug_string
 	swi OS_WriteO
-.else
-	ldr r0, vsync_delta	; rocket_sync_time
+
+.if 0
+	; display frame count / frame rate etc.
+	ldr r0, vsync_count	; vsync_delta
 	adr r1, debug_string
 	mov r2, #8
 	swi OS_ConvertHex4
@@ -233,11 +238,9 @@ exit:
 	mov r0, #19
 	swi OS_Byte
 
-.if _ENABLE_MUSIC
 	; disable music
 	mov r0, #0
 	swi QTM_Stop
-.endif
 
 	; disable vsync event
 	mov r0, #OSByte_EventDisable
@@ -412,24 +415,7 @@ get_next_screen_for_writing:
 ; Data Segment
 ; ============================================================================
 
-.if _ENABLE_MUSIC
-module_filename:
-	.byte "<Demo$Dir>.Music",0
-	.align 4
-.endif
-
-.align 4
-logo_pal_block:
-.incbin "build/logo.bin.pal"
-
-.align 4
-logo_lz4:
-.incbin "build/logo.lz4"
-
-; ============================================================================
-; BSS Segment
-; ============================================================================
-
+; TODO: Should be in BSS segment.
 .align 4
 palette_osword_block:
     .skip 8
@@ -440,6 +426,72 @@ palette_osword_block:
     ; blue
     ; (pad)
 
-.p2align 6
-y_buffer:
-	.skip Screen_Width
+.align 4
+logo_pal_block:
+.incbin "build/logo.bin.pal"
+
+.align 4
+logo_lz4:
+.incbin "build/logo.lz4"
+
+.align 4
+music_table:
+	.long music_01_mod - music_table
+	.long music_02_mod - music_table
+	.long music_03_mod - music_table
+	.long music_04_mod - music_table
+	.long music_05_mod - music_table
+	.long music_06_mod - music_table
+	.long music_07_mod - music_table
+	.long music_08_mod - music_table
+	.long music_09_mod - music_table
+	.long music_10_mod - music_table
+	.long music_11_mod - music_table
+
+.align 4
+music_01_mod:
+.incbin "build/music_01.bin"
+
+.align 4
+music_02_mod:
+.incbin "build/music_02.bin"
+
+.align 4
+music_03_mod:
+.incbin "build/music_03.bin"
+
+.align 4
+music_04_mod:
+.incbin "build/music_04.bin"
+
+.align 4
+music_05_mod:
+.incbin "build/music_05.bin"
+
+.align 4
+music_06_mod:
+.incbin "build/music_06.bin"
+
+.align 4
+music_07_mod:
+.incbin "build/music_07.bin"
+
+.align 4
+music_08_mod:
+.incbin "build/music_08.bin"
+
+.align 4
+music_09_mod:
+.incbin "build/music_09.bin"
+
+.align 4
+music_10_mod:
+.incbin "build/music_10.bin"
+
+.align 4
+music_11_mod:
+.incbin "build/music_11.bin"
+
+; ============================================================================
+; BSS Segment
+; ============================================================================

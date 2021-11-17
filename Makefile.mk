@@ -36,10 +36,9 @@ folder: code music
 	$(MKDIR_P) $(FOLDER)
 	$(COPY) .\folder\*.* "$(FOLDER)\*.*"
 	$(COPY) .\build\arc-django.bin "$(FOLDER)\!RunImage,ff8"
-	$(COPY) .\build\music_01.bin "$(FOLDER)\Music,001"
 
 .PHONY:code
-code: assets
+code: assets music
 	$(MKDIR_P) "./build"
 	$(VASM) -L compile.txt -m250 -Fbin -opt-adr -o build\arc-django.bin arc-django.asm
 
@@ -47,7 +46,10 @@ code: assets
 assets: ./build/logo.lz4 ./build/logo.bin.pal
 
 .PHONY:music
-music: ./build/music_01.bin
+music: ./build/music_01.bin ./build/music_02.bin ./build/music_03.bin \
+	./build/music_04.bin ./build/music_05.bin ./build/music_06.bin \
+	./build/music_07.bin ./build/music_08.bin ./build/music_09.bin \
+	./build/music_10.bin ./build/music_11.bin
 
 ##########################################################################
 ##########################################################################
@@ -68,7 +70,37 @@ clean:
 ##########################################################################
 ##########################################################################
 
-./build/music_01.bin: ./data/music/4mat-l-f-f.mod
+./build/music_01.bin: ./data/music/4mat-intro_music.mod
+	$(COPY) $(subst /,\\,$+) $(subst /,\\,$@)
+
+./build/music_02.bin: ./data/music/4mat-l-f-f.mod
+	$(COPY) $(subst /,\\,$+) $(subst /,\\,$@)
+
+./build/music_03.bin: ./data/music/after_v.mod
+	$(COPY) $(subst /,\\,$+) $(subst /,\\,$@)
+
+./build/music_04.bin: ./data/music/am-fm_-_chip_n_roll.mod
+	$(COPY) $(subst /,\\,$+) $(subst /,\\,$@)
+
+./build/music_05.bin: ./data/music/back_again.mod
+	$(COPY) $(subst /,\\,$+) $(subst /,\\,$@)
+
+./build/music_06.bin: ./data/music/between2.mod
+	$(COPY) $(subst /,\\,$+) $(subst /,\\,$@)
+
+./build/music_07.bin: ./data/music/chips_in_tokyo.mod
+	$(COPY) $(subst /,\\,$+) $(subst /,\\,$@)
+
+./build/music_08.bin: ./data/music/class_fe.mod
+	$(COPY) $(subst /,\\,$+) $(subst /,\\,$@)
+
+./build/music_09.bin: ./data/music/dintro.mod
+	$(COPY) $(subst /,\\,$+) $(subst /,\\,$@)
+
+./build/music_10.bin: ./data/music/dreamfish-sanxion.mod
+	$(COPY) $(subst /,\\,$+) $(subst /,\\,$@)
+
+./build/music_11.bin: ./data/music/jazzberr.mod
 	$(COPY) $(subst /,\\,$+) $(subst /,\\,$@)
 
 ##########################################################################
