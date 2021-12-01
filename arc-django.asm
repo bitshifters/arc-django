@@ -122,6 +122,9 @@ main:
 	ldr r1, screen_addr
 	bl unlz4
 
+	; Draw menu to screen.
+	bl plot_menu
+
 	; Start with song #0.
 	mov r0, #0
 	bl play_song
@@ -169,36 +172,51 @@ main_loop:
 	bl check_key
 	bne .2
 
-	ldr r0, selection_number
-	cmp r0, #0
+	ldr r3, selection_number
+	cmp r3, #0
 	beq .2
-	sub r0, r0, #1
-	str r0, selection_number
+	bl plot_menu_item
+	sub r3, r3, #1
+	str r3, selection_number
 	
 .2:
-
 	; check down
 	mov r1, #IKey_ArrowDown
 	bl check_key
 	bne .3
 
-	ldr r0, selection_number
-	cmp r0, #MAX_SONGS-1
+	ldr r3, selection_number
+	cmp r3, #MAX_SONGS-1
 	bge .3
-	add r0, r0, #1
-	str r0, selection_number
+	bl plot_menu_item
+	add r3, r3, #1
+	str r3, selection_number
 
 .3:
-
 	; check return
 	mov r1, #IKey_Return
 	bl check_key
 	bne .4
 
+	ldr r3, song_number
+
 	ldr r0, selection_number
 	bl play_song
 
+	bl plot_menu_item
+
 .4:
+	; Update selected item.
+	mov r0, #17
+	swi OS_WriteC
+	ldr r0, selection_colour
+	add r0, r0, #1
+	cmp r0, #15
+	movgt r0, #0
+	str r0, selection_colour
+	swi OS_WriteC
+	ldr r3, selection_number
+	bl plot_menu_item_ex
 
 	b main_loop
 
@@ -230,7 +248,12 @@ debug_print_r0:
 
 debug_write_vsync_count:
 	str lr, [sp, #-4]!
+	; home cursor, text colour 15.
 	mov r0, #30
+	swi OS_WriteC
+	mov r0, #17
+	swi OS_WriteC
+	mov r0, #15
 	swi OS_WriteC
 
     ; display current tracker position
@@ -472,6 +495,29 @@ play_song:
 	swi QTM_Start
 	mov pc, lr
 
+plot_menu:
+	str lr, [sp, #-4]!
+	mov r3, #MAX_SONGS
+	.1:
+	bl plot_menu_item
+	subs r3, r3, #1
+	bpl .1
+	ldr pc, [sp], #4
+
+; R3=item #
+plot_menu_item:
+	ldr r1, song_number
+	cmp r3, r1
+	adreq r0, menu_playing
+	adrne r0, menu_setup
+	swi OS_WriteO
+plot_menu_item_ex:
+	adr r2, menu_table
+	ldr r1, [r2, r3, lsl #2]	; r0 * 4
+	add r0, r1, r2				; string address
+	swi OS_WriteO
+	mov pc, lr
+
 ; ============================================================================
 ; Additional code modules
 ; ============================================================================
@@ -490,6 +536,9 @@ song_number:
 selection_number:
 	.long 0
 
+selection_colour:
+	.long 0
+
 ; TODO: Should be in BSS segment.
 .align 4
 palette_osword_block:
@@ -500,6 +549,83 @@ palette_osword_block:
     ; green
     ; blue
     ; (pad)
+
+.align 4
+menu_table:
+	.long menu_01_string - menu_table
+	.long menu_02_string - menu_table
+	.long menu_03_string - menu_table
+	.long menu_04_string - menu_table
+	.long menu_05_string - menu_table
+	.long menu_06_string - menu_table
+	.long menu_07_string - menu_table
+	.long menu_08_string - menu_table
+	.long menu_09_string - menu_table
+	.long menu_10_string - menu_table
+	.long menu_11_string - menu_table
+	.long menu_12_string - menu_table
+
+.equ MENU_SONG_XPOS, 3
+.equ MENU_ARTIST_XPOS, 23
+
+.align 4
+menu_setup:
+	.byte 17, 15	; define text colour 15
+	.byte 0
+
+menu_playing:
+	.byte 17, 6		; define text colour 6
+	.byte 0
+
+menu_seleted:
+
+.align 4
+menu_01_string:
+	.byte 31, MENU_SONG_XPOS, 14, "SWITCHING LANES", 31, MENU_ARTIST_XPOS, 14, "BY JUICE", 0
+
+.align 4
+menu_02_string:
+	.byte 31, MENU_SONG_XPOS, 15, "BRATGRUMBEERE", 31, MENU_ARTIST_XPOS, 15, "BY VIRGILL", 0
+
+.align 4
+menu_03_string:
+	.byte 31, MENU_SONG_XPOS, 16, "RED DROPS", 31, MENU_ARTIST_XPOS, 16, "BY OKEANOS", 0
+
+.align 4
+menu_04_string:
+	.byte 31, MENU_SONG_XPOS, 17, "AMIGA FUNERAL", 31, MENU_ARTIST_XPOS, 17, "BY VIRGILL", 0
+
+.align 4
+menu_05_string:
+	.byte 31, MENU_SONG_XPOS, 18, "A VIRAG ELSZARADT", 31, MENU_ARTIST_XPOS, 18, "BY DALEZY", 0
+
+.align 4
+menu_06_string:
+	.byte 31, MENU_SONG_XPOS, 19, "PAWS AND CLAWS", 31, MENU_ARTIST_XPOS, 19, "BY SLASH", 0
+
+.align 4
+menu_07_string:
+	.byte 31, MENU_SONG_XPOS, 20, "RESURGENCE", 31, MENU_ARTIST_XPOS, 20, "BY VEDDER", 0
+
+.align 4
+menu_08_string:
+	.byte 31, MENU_SONG_XPOS, 21, "QUICKSHOT DRAMAKING", 31, MENU_ARTIST_XPOS, 21, "BY CURT COOL", 0
+
+.align 4
+menu_09_string:
+	.byte 31, MENU_SONG_XPOS, 22, "SYNCOPATED GROOVE", 31, MENU_ARTIST_XPOS, 22, "BY OKEANOS", 0
+
+.align 4
+menu_10_string:
+	.byte 31, MENU_SONG_XPOS, 23, "PAULA AT THE DISCO", 31, MENU_ARTIST_XPOS, 23, "BY TRIACE", 0
+
+.align 4
+menu_11_string:
+	.byte 31, MENU_SONG_XPOS, 24, "CONCORDIA", 31, MENU_ARTIST_XPOS, 24, "BY MAZE", 0
+
+.align 4
+menu_12_string:
+	.byte 31, 32, 25, "AUTOPLAY", 0
 
 .align 4
 logo_pal_block:

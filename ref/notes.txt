@@ -8,10 +8,11 @@ Rabenauge splash
 - fades out (decompress?)
 
 Menu screen:
+- Fade in (at least on the ST version)
 - Chip Django logo fixed at top
 - Logo glitches (deliberately!) when a new tune is selected
 
-- Menu with 11 entries, fixed
+- Menu with 11 entries, fixed - 8x7 pixel font...
 - First tune begins playing immediately
 - Currently playing tune is in bold (separate font?)
 - Menu selection via mouse
@@ -44,18 +45,23 @@ Assets needed:
 - Scroll text
 
 To dos:
-- Set up new project and strip back
+- Set up new project and strip back - DONE(ish - could strip back more code)
 - (Ignore splash for now - assume this is decompression / easy to add later)
 - Menu screen layout
-    - Top logo
+    - Top logo - DONE
     - Menu area
     - Scroll areas
 - Populate menu from data
-- Play a tune from RAM
-- Basic tune selection
+- Play a tune from RAM - DONE
+- Basic tune selection - DONE
+- Menu update and selection
 - Text scroller
 - Note scroller
-- Beat rasters
+- Beat rasters - use QTM_ReadVULevels
 - Polish effects
     - Logo glitch
     - Menu highlights
+
+Check audio quality on real hardware!
+Some of the very small chip tunes don't sound great in Arculator?
+Set QTM sample quality to maximum for a musicdisk! - DONE
