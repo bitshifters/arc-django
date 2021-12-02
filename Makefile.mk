@@ -16,6 +16,7 @@ PYTHON3?=python
 endif
 
 PNG2ARC=./bin/png2arc.py
+PNG2ARC_FONT=./bin/png2arc_font.py
 PNG2BBC_DEPS:=./bin/png2arc.py ./bin/arc.py
 FOLDER=!Django01
 HOSTFS=..\..\Arculator_V2.0_Windows/hostfs
@@ -43,7 +44,7 @@ code: assets music
 	$(VASM) -L compile.txt -m250 -Fbin -opt-adr -o build\arc-django.bin arc-django.asm
 
 .PHONY:assets
-assets: ./build/logo.lz4 ./build/logo.bin.pal
+assets: ./build/logo.lz4 ./build/logo.bin.pal ./build/scroller_font.bin
 
 .PHONY:music
 music: ./build/music_01.bin ./build/music_02.bin ./build/music_03.bin \
@@ -63,9 +64,13 @@ clean:
 ##########################################################################
 
 ./build/logo.lz4: ./build/logo.bin
-./build/logo.bin: ./data/gfx/logo_320x98.png
+./build/logo.bin: ./data/gfx/logo_320x98.png $(PNG2BBC_DEPS)
 	$(MKDIR_P) "./build"
 	$(PYTHON2) $(PNG2ARC) -o $@ -p $@.pal $< 9 --x2
+
+./build/scroller_font.bin: ./data/font/null_terminator_1.png $(PNG2BBC_DEPS)
+	$(MKDIR_P) "./build"
+	$(PYTHON2) $(PNG2ARC_FONT) -o $@ --glyph-dim 16 16 $< 9
 
 ##########################################################################
 ##########################################################################

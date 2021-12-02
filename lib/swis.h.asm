@@ -1,5 +1,6 @@
 .equ OS_WriteC, 0
 .equ OS_WriteO, 2
+.equ OS_WriteN, 0x46
 .equ OS_NewLine, 3
 .equ OS_Byte, 6
 .equ XOS_Byte, OS_Byte | (1 << 17)

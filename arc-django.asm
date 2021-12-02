@@ -59,19 +59,10 @@ main:
 	ADRCC r0, error_noscreenmem
 	SWICC OS_GenerateError
 
-	MOV r0,#23	;Disable cursor
-	SWI OS_WriteC
-	MOV r0,#1
-	SWI OS_WriteC
-	MOV r0,#0
-	SWI OS_WriteC
-	SWI OS_WriteC
-	SWI OS_WriteC
-	SWI OS_WriteC
-	SWI OS_WriteC
-	SWI OS_WriteC
-	SWI OS_WriteC
-	SWI OS_WriteC
+	; Disable cursor
+	adr r0, vdu_disable_cursor
+	mov r1, #8
+	swi OS_WriteN
 
 	; EARLY INIT / LOAD STUFF HERE!
 	; Set QTM sample quality to maximum as we can afford the CPU time
@@ -162,6 +153,9 @@ main_loop:
 	ldr r8, screen_addr
 	bl show_screen_at_vsync
 
+	; scroll the bottom.
+	bl scroller_scroll_row
+
 	; exit if Escape is pressed
 	mov r1, #IKey_Escape
 	bl check_key
@@ -207,7 +201,7 @@ main_loop:
 
 .4:
 	; Update selected item.
-	mov r0, #17
+	mov r0, #17	; set text colour
 	swi OS_WriteC
 	ldr r0, selection_colour
 	add r0, r0, #1
@@ -248,10 +242,9 @@ debug_print_r0:
 
 debug_write_vsync_count:
 	str lr, [sp, #-4]!
-	; home cursor, text colour 15.
-	mov r0, #30
+	mov r0, #30	; home cursor
 	swi OS_WriteC
-	mov r0, #17
+	mov r0, #17	; set text colour
 	swi OS_WriteC
 	mov r0, #15
 	swi OS_WriteC
@@ -519,6 +512,140 @@ plot_menu_item_ex:
 	mov pc, lr
 
 ; ============================================================================
+; Scroller
+; ============================================================================
+
+scroller_scroll_row:
+	str lr, [sp, #-4]!
+
+	; set border colour!
+	adr r0, vdu_set_border_red
+	mov r1, #6
+	swi OS_WriteN
+
+	ldr r12, screen_addr
+	mov r10, #0x0F
+	mov r11, #240
+	.1:
+	bl scroller_scroll_line
+	add r11, r11, #1
+	cmp r11, #256
+	blt .1
+
+	; set border colour!
+	adr r0, vdu_set_border_black
+	mov r1, #6
+	swi OS_WriteN
+	ldr pc, [sp], #4
+
+; R12=screen_addr, R11=line number, R10=right hand word
+scroller_scroll_line:
+	add r9, r12, r11, lsl #7	; y*128
+	add r9, r9, r11, lsl #5	; +y*32 = y*160
+
+	ldmia r9, {r0-r8}		; read 9 words = 36 bytes = 72 pixels
+	; shift word right 4 bits to clear left most pixel
+	mov r0, r0, lsr #4		; word0 >> 4
+	; mask in right most pixel from next word
+	orr r0, r0, r1, lsl #28		; word0 |= word1 << 28
+
+	mov r1, r1, lsr #4
+	orr r1, r1, r2, lsl #28
+	mov r2, r2, lsr #4
+	orr r2, r2, r3, lsl #28
+	mov r3, r3, lsr #4
+	orr r3, r3, r4, lsl #28
+
+	mov r4, r4, lsr #4
+	orr r4, r4, r5, lsl #28
+	mov r5, r5, lsr #4
+	orr r5, r5, r6, lsl #28
+	mov r6, r6, lsr #4
+	orr r6, r6, r7, lsl #28
+	mov r7, r7, lsr #4
+	orr r7, r7, r8, lsl #28
+
+	stmia r9!, {r0-r7}		; write 8 words = 32 bytes = 64 pixels
+
+	ldmia r9, {r0-r8}		; read 9 words = 36 bytes = 72 pixels
+	mov r0, r0, lsr #4
+	orr r0, r0, r1, lsl #28
+	mov r1, r1, lsr #4
+	orr r1, r1, r2, lsl #28
+	mov r2, r2, lsr #4
+	orr r2, r2, r3, lsl #28
+	mov r3, r3, lsr #4
+	orr r3, r3, r4, lsl #28
+	mov r4, r4, lsr #4
+	orr r4, r4, r5, lsl #28
+	mov r5, r5, lsr #4
+	orr r5, r5, r6, lsl #28
+	mov r6, r6, lsr #4
+	orr r6, r6, r7, lsl #28
+	mov r7, r7, lsr #4
+	orr r7, r7, r8, lsl #28
+	stmia r9!, {r0-r7}		; write 8 words = 32 bytes = 64 pixels
+
+	ldmia r9, {r0-r8}		; read 9 words = 36 bytes = 72 pixels
+	mov r0, r0, lsr #4
+	orr r0, r0, r1, lsl #28
+	mov r1, r1, lsr #4
+	orr r1, r1, r2, lsl #28
+	mov r2, r2, lsr #4
+	orr r2, r2, r3, lsl #28
+	mov r3, r3, lsr #4
+	orr r3, r3, r4, lsl #28
+	mov r4, r4, lsr #4
+	orr r4, r4, r5, lsl #28
+	mov r5, r5, lsr #4
+	orr r5, r5, r6, lsl #28
+	mov r6, r6, lsr #4
+	orr r6, r6, r7, lsl #28
+	mov r7, r7, lsr #4
+	orr r7, r7, r8, lsl #28
+	stmia r9!, {r0-r7}		; write 8 words = 32 bytes = 64 pixels
+
+	ldmia r9, {r0-r8}		; read 9 words = 36 bytes = 72 pixels
+	mov r0, r0, lsr #4
+	orr r0, r0, r1, lsl #28
+	mov r1, r1, lsr #4
+	orr r1, r1, r2, lsl #28
+	mov r2, r2, lsr #4
+	orr r2, r2, r3, lsl #28
+	mov r3, r3, lsr #4
+	orr r3, r3, r4, lsl #28
+	mov r4, r4, lsr #4
+	orr r4, r4, r5, lsl #28
+	mov r5, r5, lsr #4
+	orr r5, r5, r6, lsl #28
+	mov r6, r6, lsr #4
+	orr r6, r6, r7, lsl #28
+	mov r7, r7, lsr #4
+	orr r7, r7, r8, lsl #28
+	stmia r9!, {r0-r7}		; write 8 words = 32 bytes = 64 pixels
+
+	ldmia r9, {r0-r7}		; read 8 words = 32 bytes = 64 pixels
+	mov r0, r0, lsr #4
+	orr r0, r0, r1, lsl #28
+	mov r1, r1, lsr #4
+	orr r1, r1, r2, lsl #28
+	mov r2, r2, lsr #4
+	orr r2, r2, r3, lsl #28
+	mov r3, r3, lsr #4
+	orr r3, r3, r4, lsl #28
+	mov r4, r4, lsr #4
+	orr r4, r4, r5, lsl #28
+	mov r5, r5, lsr #4
+	orr r5, r5, r6, lsl #28
+	mov r6, r6, lsr #4
+	orr r6, r6, r7, lsl #28
+	mov r7, r7, lsr #4
+	orr r7, r7, r10, lsl #28	; new data word
+	stmia r9!, {r0-r7}		; write 8 words = 32 bytes = 64 pixels
+
+	mov pc, lr
+
+; ============================================================================
 ; Additional code modules
 ; ============================================================================
 
@@ -538,6 +665,18 @@ selection_number:
 
 selection_colour:
 	.long 0
+
+vdu_disable_cursor:
+.byte 23,1,0,0,0,0,0,0,0,0
+.align 4
+
+vdu_set_border_red:
+.byte 19,0,24,255,0,0
+.align 4
+
+vdu_set_border_black:
+.byte 19,0,24,0,0,0
+.align 4
 
 ; TODO: Should be in BSS segment.
 .align 4
@@ -625,7 +764,7 @@ menu_11_string:
 
 .align 4
 menu_12_string:
-	.byte 31, 32, 25, "AUTOPLAY", 0
+	.byte 31, 32, 30, "AUTOPLAY", 0
 
 .align 4
 logo_pal_block:
@@ -692,6 +831,10 @@ music_10_mod:
 .align 4
 music_11_mod:
 .incbin "build/music_11.bin"
+
+.align 4
+scroller_font_data:
+.incbin "build/scroller_font.bin"
 
 ; ============================================================================
 ; BSS Segment
