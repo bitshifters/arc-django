@@ -65,3 +65,5 @@ To dos:
 Check audio quality on real hardware!
 Some of the very small chip tunes don't sound great in Arculator?
 Set QTM sample quality to maximum for a musicdisk! - DONE
+-> Actually this makes the chip samples sound worse!
+-> Much better left at default.

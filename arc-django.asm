@@ -4,6 +4,7 @@
 
 .equ _DEBUG, 1
 .equ _FIX_FRAME_RATE, 0					; useful for !DDT breakpoints
+.equ _DEBUG_RASTERS, (_DEBUG && 0)
 
 .equ Screen_Banks, 1
 .equ Screen_Mode, 9
@@ -14,6 +15,10 @@
 .equ Screen_Stride, Screen_Width/Screen_PixelsPerByte
 .equ Screen_Bytes, Screen_Stride*Screen_Height
 .equ Mode_Bytes, Screen_Stride*Mode_Height
+
+.equ Scroller_Glyph_Width, 16
+.equ Scroller_Glyph_Height, 16
+.equ Scroller_Y_Pos, 240
 
 .include "lib/swis.h.asm"
 
@@ -65,10 +70,11 @@ main:
 	swi OS_WriteN
 
 	; EARLY INIT / LOAD STUFF HERE!
-	; Set QTM sample quality to maximum as we can afford the CPU time
-	; plus some of the chip tune samples require more fidelity.
-	; TODO: Test how this sounds on real hardware vs emulator.
-	mov r0, #16
+	; Setting sample quality to maximum makes the tunes sound much worse!
+	; QTM default is 32us, but 48us sounds correct. I presume this is
+	; because chiptune samples are so small they cannot be interpolated
+	; in any meaningful way.
+	mov r0, #48
 	swi QTM_SetSampleSpeed
 
 	; Clear all screen buffers
@@ -154,7 +160,7 @@ main_loop:
 	bl show_screen_at_vsync
 
 	; scroll the bottom.
-	bl scroller_scroll_row
+	bl scroller_update
 
 	; exit if Escape is pressed
 	mov r1, #IKey_Escape
@@ -478,13 +484,21 @@ get_next_screen_for_writing:
 
 play_song:
 	swi QTM_Stop
-	; Load module
+	; Unload the current module.
+	mov r1, r0
+	mov r0, #-1
+	swi QTM_Clear
+	mov r0, r1
+
+	; Load module.
 	str r0, song_number
 	adr r2, music_table
 	ldr r1, [r2, r0, lsl #2]	; r0 * 4
 	add r1, r1, r2				; MOD data address
 	mov r0, #0					; load from address
 	swi QTM_Load
+
+	; Play music!
 	swi QTM_Start
 	mov pc, lr
 
@@ -515,27 +529,94 @@ plot_menu_item_ex:
 ; Scroller
 ; ============================================================================
 
+scroller_update:
+	str lr, [sp, #-4]!
+
+	; next column index
+	ldr r0, scroller_cur_column
+	add r0, r0, #1
+	cmp r0, #Scroller_Glyph_Width
+	; next string char?
+	blge get_next_char
+	str r0, scroller_cur_column
+
+	; next glyph word?
+	ands r1, r0, #7		; 8 pixels per word
+
+	;   copy glyph word to a buffer
+	bleq get_next_glyph_word
+
+	; scroll the row
+	bl scroller_scroll_row
+	ldr pc, [sp], #4
+
+get_next_char:
+	ldr r10, scroller_text_ptr
+	.1:
+	ldrb r0, [r10], #1
+	cmp r0, #0
+	beq .2
+	str r10, scroller_text_ptr
+
+	adr r9, scroller_font_data
+	sub r0, r0, #32	; start at ' '
+	; TODO: Multiply by constant macros.
+	add r9, r9, r0, lsl #7		; *128 bytes per glyph.
+	str r9, scroller_glyph_data_ptr
+	mov r0, #0	; cur_column
+	mov pc, lr
+
+.2:
+	adr r10, scroller_text_string
+	b .1
+
+; r0=column
+get_next_glyph_word:
+	ldr r9, scroller_glyph_data_ptr
+	adr r10, scroller_glyph_column_buffer
+
+	mov r0, r0, lsr #3	; div 8 to get column.
+	add r9, r9, r0, lsl #2	; *4 to get word.
+	mov r1, #Scroller_Glyph_Height
+	.1:
+	ldr r2, [r9], #Scroller_Glyph_Width/2	; stride.
+	str r2, [r10], #4
+	subs r1, r1, #1
+	bne .1
+	mov pc, lr
+
 scroller_scroll_row:
 	str lr, [sp, #-4]!
 
 	; set border colour!
+	.if _DEBUG_RASTERS
 	adr r0, vdu_set_border_red
 	mov r1, #6
 	swi OS_WriteN
+	.endif
 
 	ldr r12, screen_addr
-	mov r10, #0x0F
-	mov r11, #240
+	mov r0, #Scroller_Y_Pos
+	add r12, r12, r0, lsl #7	; y*128
+	add r12, r12, r0, lsl #5	; +y*32 = y*160
+
+	mov r11, #0
 	.1:
+	adr r0, scroller_glyph_column_buffer
+	ldr r10, [r0, r11, lsl #2]	; r10=scroller_glyph_column_buffer[r11]
 	bl scroller_scroll_line
+	adr r0, scroller_glyph_column_buffer
+	str r10, [r0, r11, lsl #2]	; scroller_glyph_column_buffer[r11]=r10
 	add r11, r11, #1
-	cmp r11, #256
+	cmp r11, #Scroller_Glyph_Height
 	blt .1
 
 	; set border colour!
+	.if _DEBUG_RASTERS
 	adr r0, vdu_set_border_black
 	mov r1, #6
 	swi OS_WriteN
+	.endif
 	ldr pc, [sp], #4
 
 ; R12=screen_addr, R11=line number, R10=right hand word
@@ -548,14 +629,12 @@ scroller_scroll_line:
 	mov r0, r0, lsr #4		; word0 >> 4
 	; mask in right most pixel from next word
 	orr r0, r0, r1, lsl #28		; word0 |= word1 << 28
-
 	mov r1, r1, lsr #4
 	orr r1, r1, r2, lsl #28
 	mov r2, r2, lsr #4
 	orr r2, r2, r3, lsl #28
 	mov r3, r3, lsr #4
 	orr r3, r3, r4, lsl #28
-
 	mov r4, r4, lsr #4
 	orr r4, r4, r5, lsl #28
 	mov r5, r5, lsr #4
@@ -564,7 +643,6 @@ scroller_scroll_line:
 	orr r6, r6, r7, lsl #28
 	mov r7, r7, lsr #4
 	orr r7, r7, r8, lsl #28
-
 	stmia r9!, {r0-r7}		; write 8 words = 32 bytes = 64 pixels
 
 	ldmia r9, {r0-r8}		; read 9 words = 36 bytes = 72 pixels
@@ -643,7 +721,11 @@ scroller_scroll_line:
 	orr r7, r7, r10, lsl #28	; new data word
 	stmia r9!, {r0-r7}		; write 8 words = 32 bytes = 64 pixels
 
+	mov r10, r10, lsr #4		; rotate new data word
 	mov pc, lr
+
+scroller_glyph_column_buffer:
+	.skip Scroller_Glyph_Height * 4
 
 ; ============================================================================
 ; Additional code modules
@@ -664,6 +746,15 @@ selection_number:
 	.long 0
 
 selection_colour:
+	.long 0
+
+scroller_text_ptr:
+	.long scroller_text_string_end-1
+
+scroller_cur_column:
+	.long 15
+
+scroller_glyph_data_ptr:
 	.long 0
 
 vdu_disable_cursor:
@@ -688,6 +779,12 @@ palette_osword_block:
     ; green
     ; blue
     ; (pad)
+
+scroller_text_string:
+	.byte "Hello World! This is probably the slowest scrolltext in the world.                    "
+	.byte 0
+	.align 4
+scroller_text_string_end:
 
 .align 4
 menu_table:
@@ -764,7 +861,7 @@ menu_11_string:
 
 .align 4
 menu_12_string:
-	.byte 31, 32, 30, "AUTOPLAY", 0
+	.byte 31, 32, 25, "AUTOPLAY", 0
 
 .align 4
 logo_pal_block:

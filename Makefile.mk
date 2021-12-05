@@ -17,7 +17,7 @@ endif
 
 PNG2ARC=./bin/png2arc.py
 PNG2ARC_FONT=./bin/png2arc_font.py
-PNG2BBC_DEPS:=./bin/png2arc.py ./bin/arc.py
+PNG2ARC_DEPS:=./bin/png2arc.py ./bin/arc.py ./bin/png2arc_font.py
 FOLDER=!Django01
 HOSTFS=..\..\Arculator_V2.0_Windows/hostfs
 # TODO: Need a copy command that copes with forward slash directory separator.
@@ -64,11 +64,11 @@ clean:
 ##########################################################################
 
 ./build/logo.lz4: ./build/logo.bin
-./build/logo.bin: ./data/gfx/logo_320x98.png $(PNG2BBC_DEPS)
+./build/logo.bin: ./data/gfx/logo_320x98.png $(PNG2ARC_DEPS)
 	$(MKDIR_P) "./build"
 	$(PYTHON2) $(PNG2ARC) -o $@ -p $@.pal $< 9 --x2
 
-./build/scroller_font.bin: ./data/font/null_terminator_1.png $(PNG2BBC_DEPS)
+./build/scroller_font.bin: ./data/font/null_terminator_1.png $(PNG2ARC_DEPS)
 	$(MKDIR_P) "./build"
 	$(PYTHON2) $(PNG2ARC_FONT) -o $@ --glyph-dim 16 16 $< 9
 

@@ -31,8 +31,10 @@ def to_box_row_palette_indices(boxed_row_flat_pixel, palette):
         pidxs.append([])
         for i in range(0,len(row),4):
             rgb = [row[i+0],row[i+1],row[i+2]]
-            idx = palette.index(rgb)
-            pidxs[-1].append(idx)
+            # Prefer towards the end of the palette?
+            # Probably unless zero?
+            idx_last = len(palette) - palette[::-1].index(rgb) - 1
+            pidxs[-1].append(idx_last)
 
     return pidxs
 
@@ -75,6 +77,10 @@ def main(options):
 
     # Reading the file again seems wrong?
     png_result=png.Reader(filename=options.input_path).asRGBA8()
+
+    if options.loud:
+        print(palette)
+        
     pixels = to_box_row_palette_indices(png_result[2], palette)
     assert(len(pixels)==src_height)
 
