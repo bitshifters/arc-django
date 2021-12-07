@@ -58,3 +58,5 @@
 .equ QTM_SetSampleSpeed, 0x47E49
 .equ QTM_Pos, 0x47E46
 .equ QTM_Clear, 0x47E44
+.equ QTM_ReadVULevels, 0x47E51
+.equ QTM_VUBarControl, 0x47E50

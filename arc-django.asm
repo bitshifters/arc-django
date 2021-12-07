@@ -20,6 +20,12 @@
 .equ Scroller_Glyph_Height, 16
 .equ Scroller_Y_Pos, 240
 
+.equ VU_Bars_Y_Pos, 216
+.equ VU_Bars_Height, 4
+.equ VU_Bars_Gap, 5
+.equ VU_Bars_Effect, 2	; 'effect'
+.equ VU_Bars_Gravity, 1	; lines per vsync
+
 .include "lib/swis.h.asm"
 
 ; ============================================================================
@@ -76,6 +82,10 @@ main:
 	; in any meaningful way.
 	mov r0, #48
 	swi QTM_SetSampleSpeed
+
+	mov r0, #VU_Bars_Effect
+	mov r1, #VU_Bars_Gravity
+	swi QTM_VUBarControl
 
 	; Clear all screen buffers
 	mov r1, #1
@@ -161,6 +171,9 @@ main_loop:
 
 	; scroll the bottom.
 	bl scroller_update
+
+	; do VU bars.
+	bl update_vu_bars
 
 	; exit if Escape is pressed
 	mov r1, #IKey_Escape
@@ -504,6 +517,10 @@ play_song:
 
 plot_menu:
 	str lr, [sp, #-4]!
+	.if _DEBUG
+	adr r0, menu_debug
+	swi OS_WriteO
+	.endif
 	mov r3, #MAX_SONGS
 	.1:
 	bl plot_menu_item
@@ -728,6 +745,78 @@ scroller_glyph_column_buffer:
 	.skip Scroller_Glyph_Height * 4
 
 ; ============================================================================
+; VU bars
+; ============================================================================
+
+update_vu_bars:
+	str lr, [sp, #-4]!
+	mov r0, #0
+	swi QTM_ReadVULevels
+	; R0 = word containing 1 byte per channel 1-4 VU bar heights 0-64
+
+	ldr r12, screen_addr
+
+	and r10, r0, #0xff
+	mov r11, #VU_Bars_Y_Pos
+	bl plot_vu_bar
+
+	mov r10, r0, lsr #8
+	and r10, r10, #0xff
+	mov r11, #VU_Bars_Y_Pos + 1 * VU_Bars_Gap
+	bl plot_vu_bar
+
+	mov r10, r0, lsr #16
+	and r10, r10, #0xff
+	mov r11, #VU_Bars_Y_Pos + 2 * VU_Bars_Gap
+	bl plot_vu_bar
+
+	mov r10, r0, lsr #24
+	mov r11, #VU_Bars_Y_Pos + 3 * VU_Bars_Gap
+	bl plot_vu_bar
+
+	ldr pc, [sp], #4
+
+; R10 = value (0-64).
+; R11 = y pos on screen.
+; Preserve R0 please.
+plot_vu_bar:
+	str lr, [sp, #-4]!
+	add r9, r12, r11, lsl #7	; y*128
+	add r9, r9, r11, lsl #5		; +y*32 = y*160
+
+	mov r1, r10, lsr #2		; div 4 (0-16)
+	cmp r1, #16
+	movge r1, #15			; clamp to 15.
+
+	orr r1, r1, r1, lsl #4	; duplicate nibble.
+	orr r1, r1, r1, lsl #8	; duplicate byte.
+	orr r1, r1, r1, lsl #16	; duplicate word.
+
+	mov r2, r1
+	mov r3, r1
+	mov r4, r1
+	mov r5, r1
+	mov r6, r1
+	mov r7, r1
+	mov r8, r1
+
+	.rept VU_Bars_Height
+	bl plot_horizontal_line
+	.endr
+
+	ldr pc, [sp], #4
+
+; R9 = ptr to start of line.
+; Assume R1-R8 contain screen data.
+plot_horizontal_line:
+	stmia r9!, {r1-r8}		; 32 bytes
+	stmia r9!, {r1-r8}		; 32 bytes
+	stmia r9!, {r1-r8}		; 32 bytes
+	stmia r9!, {r1-r8}		; 32 bytes
+	stmia r9!, {r1-r8}		; 32 bytes
+	mov pc, lr
+
+; ============================================================================
 ; Additional code modules
 ; ============================================================================
 
@@ -804,16 +893,22 @@ menu_table:
 .equ MENU_SONG_XPOS, 3
 .equ MENU_ARTIST_XPOS, 23
 
+.if _DEBUG
+.align 4
+menu_debug:
+	.byte 17, 6		; define text colour 6
+	.byte 31, MENU_SONG_XPOS, 13, "!!!! NOT THE CORRECT MUSIC !!!!", 0
+.endif
+
 .align 4
 menu_setup:
 	.byte 17, 15	; define text colour 15
 	.byte 0
 
+.align 4
 menu_playing:
 	.byte 17, 6		; define text colour 6
 	.byte 0
-
-menu_seleted:
 
 .align 4
 menu_01_string:
@@ -861,6 +956,7 @@ menu_11_string:
 
 .align 4
 menu_12_string:
+	.byte 17, 8		; define text colour 8
 	.byte 31, 32, 25, "AUTOPLAY", 0
 
 .align 4
