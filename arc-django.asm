@@ -26,6 +26,8 @@
 .equ VU_Bars_Effect, 2	; 'effect'
 .equ VU_Bars_Gravity, 1	; lines per vsync
 
+.equ Mouse_Sensitivity, 10
+
 .include "lib/swis.h.asm"
 
 ; ============================================================================
@@ -175,6 +177,8 @@ main_loop:
 	; do VU bars.
 	bl update_vu_bars
 
+	bl keyboard_scan_debounced
+
 	; exit if Escape is pressed
 	mov r1, #IKey_Escape
 	bl check_key
@@ -182,7 +186,7 @@ main_loop:
 
 	; check up
 	mov r1, #IKey_ArrowUp
-	bl check_key
+	bl check_key_debounced
 	bne .2
 
 	ldr r3, selection_number
@@ -195,7 +199,7 @@ main_loop:
 .2:
 	; check down
 	mov r1, #IKey_ArrowDown
-	bl check_key
+	bl check_key_debounced
 	bne .3
 
 	ldr r3, selection_number
@@ -208,17 +212,52 @@ main_loop:
 .3:
 	; check return
 	mov r1, #IKey_Return
-	bl check_key
-	bne .4
+	bl check_key_debounced
+	beq .4
 
+	mov r1, #IKey_LeftClick
+	bl check_key_debounced
+	bne .5
+
+	.4:
 	ldr r3, song_number
-
 	ldr r0, selection_number
 	bl play_song
-
 	bl plot_menu_item
 
-.4:
+.5:
+	; Check mouse.
+	swi OS_Mouse
+	ldr r0, prev_mouse_y
+	str r1, prev_mouse_y
+	subs r0, r0, r1
+	; R0=mouse delta
+	cmp r0, #Mouse_Sensitivity
+	blt .6
+
+	; TODO: Dedupe code.
+	ldr r3, selection_number
+	cmp r3, #MAX_SONGS-1
+	bge .6
+	bl plot_menu_item
+	add r3, r3, #1
+	str r3, selection_number
+
+.6:
+	cmp r0, #-Mouse_Sensitivity
+	bgt .7
+
+	; TODO: Dedupe code.
+	ldr r3, selection_number
+	cmp r3, #0
+	beq .7
+	bl plot_menu_item
+	sub r3, r3, #1
+	str r3, selection_number
+
+.7:
+	str r0, mouse_delta_y
+
 	; Update selected item.
 	mov r0, #17	; set text colour
 	swi OS_WriteC
@@ -233,6 +272,26 @@ main_loop:
 
 	b main_loop
 
+keyboard_scan_debounced:
+	mov r0, #OSByte_KeyboardScan
+	mov r1, #1
+	swi OS_Byte
+	; R1 contains key or 0xff if no key.
+	mov r2, r1	; key pressed
+	ldr r0, held_key
+	cmp r1, r0
+	moveq r2, #0xff
+	str r1, held_key
+	str r2, current_key
+	mov pc, lr
+
+; R1=IKey no. EOR 0xff
+check_key_debounced:
+	eor r1, r1, #0xff
+	ldr r0, current_key
+	cmp r0, r1
+	mov pc, lr
+
 ; R1=IKey no.
 check_key:
 	mov r0, #OSByte_ReadKey
@@ -241,6 +300,18 @@ check_key:
 	cmp r1, #0xff
 	cmpeq r2, #0xff
 	mov pc, lr
+
+current_key:
+	.long 0
+
+held_key:
+	.long 0
+
+prev_mouse_y:
+	.long 0
+
+mouse_delta_y:
+	.long 0
 
 error_noscreenmem:
 	.long 0
@@ -294,6 +365,11 @@ debug_write_vsync_count:
 	mov r0, #32
 	swi OS_WriteC
 	ldr r0, selection_number
+	bl debug_print_r0
+
+	mov r0, #32
+	swi OS_WriteC
+	ldr r0, prev_mouse_y
 	bl debug_print_r0
 
 .if 0

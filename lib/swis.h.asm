@@ -9,6 +9,7 @@
 .equ OS_File, 8
 .equ OS_Exit, 0x11
 .equ OS_BreakPt, 0x17
+.equ OS_Mouse, 0x1c
 .equ OS_ChangeDynamicArea, 0x2a
 .equ OS_GenerateError, 0x2b
 .equ OS_ReadVduVariables, 0x31
@@ -25,6 +26,7 @@
 .equ OSByte_Vsync, 19
 .equ OSByte_WriteVDUBank, 112
 .equ OSByte_WriteDisplayBank, 113
+.equ OSByte_KeyboardScan, 121
 .equ OSByte_ReadKey, 129
 
 .equ OSWord_WritePalette, 12
