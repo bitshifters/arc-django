@@ -64,9 +64,9 @@ clean:
 ##########################################################################
 
 ./build/logo.lz4: ./build/logo.bin
-./build/logo.bin: ./data/gfx/logo_320x98.png $(PNG2ARC_DEPS)
+./build/logo.bin: ./data/gfx/chipoDjango3.png $(PNG2ARC_DEPS)
 	$(MKDIR_P) "./build"
-	$(PYTHON2) $(PNG2ARC) -o $@ -p $@.pal $< 9 --x2
+	$(PYTHON2) $(PNG2ARC) -o $@ -p $@.pal $< 9
 
 ./build/scroller_font.bin: ./data/font/null_terminator_1.png $(PNG2ARC_DEPS)
 	$(MKDIR_P) "./build"
@@ -75,37 +75,37 @@ clean:
 ##########################################################################
 ##########################################################################
 
-./build/music_01.bin: ./data/music/4mat-intro_music.mod
+./build/music_01.bin: ./data/music/Juice-switchin-lanes.mod
 	$(COPY) $(subst /,\\,$+) $(subst /,\\,$@)
 
-./build/music_02.bin: ./data/music/4mat-l-f-f.mod
+./build/music_02.bin: ./data/music/bratgrumbeere.mod
 	$(COPY) $(subst /,\\,$+) $(subst /,\\,$@)
 
-./build/music_03.bin: ./data/music/after_v.mod
+./build/music_03.bin: ./data/music/mod.okeanos-red-drops_FIXED.mod
 	$(COPY) $(subst /,\\,$+) $(subst /,\\,$@)
 
-./build/music_04.bin: ./data/music/am-fm_-_chip_n_roll.mod
+./build/music_04.bin: ./data/music/amiga-funeral.mod
 	$(COPY) $(subst /,\\,$+) $(subst /,\\,$@)
 
-./build/music_05.bin: ./data/music/back_again.mod
+./build/music_05.bin: ./data/music/dalezy-a-virag-elszaradt.mod
 	$(COPY) $(subst /,\\,$+) $(subst /,\\,$@)
 
-./build/music_06.bin: ./data/music/between2.mod
+./build/music_06.bin: ./data/music/slash-paws-and-claws.mod
 	$(COPY) $(subst /,\\,$+) $(subst /,\\,$@)
 
-./build/music_07.bin: ./data/music/chips_in_tokyo.mod
+./build/music_07.bin: ./data/music/mod.vedder-resurgence.final.mod
 	$(COPY) $(subst /,\\,$+) $(subst /,\\,$@)
 
-./build/music_08.bin: ./data/music/class_fe.mod
+./build/music_08.bin: ./data/music/curt-cool-quickshot_dramaking.mod
 	$(COPY) $(subst /,\\,$+) $(subst /,\\,$@)
 
-./build/music_09.bin: ./data/music/dintro.mod
+./build/music_09.bin: ./data/music/mod.okeanos-syncopated-groove.mod
 	$(COPY) $(subst /,\\,$+) $(subst /,\\,$@)
 
-./build/music_10.bin: ./data/music/dreamfish-sanxion.mod
+./build/music_10.bin: ./data/music/Triace-Paula-at-the-Disco-final.mod
 	$(COPY) $(subst /,\\,$+) $(subst /,\\,$@)
 
-./build/music_11.bin: ./data/music/jazzberr.mod
+./build/music_11.bin: ./data/music/mA2E-Concordia.mod
 	$(COPY) $(subst /,\\,$+) $(subst /,\\,$@)
 
 ##########################################################################

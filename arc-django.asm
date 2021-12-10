@@ -973,7 +973,7 @@ menu_table:
 .align 4
 menu_debug:
 	.byte 17, 6		; define text colour 6
-	.byte 31, MENU_SONG_XPOS, 13, "!!!! NOT THE CORRECT MUSIC !!!!", 0
+	.byte 31, MENU_SONG_XPOS, 13, "!!!! NOT THE CORRECT FONTS !!!!", 0
 .endif
 
 .align 4
