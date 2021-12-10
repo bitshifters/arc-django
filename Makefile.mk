@@ -68,9 +68,9 @@ clean:
 	$(MKDIR_P) "./build"
 	$(PYTHON2) $(PNG2ARC) -o $@ -p $@.pal $< 9
 
-./build/scroller_font.bin: ./data/font/null_terminator_1.png $(PNG2ARC_DEPS)
+./build/scroller_font.bin: ./data/font/font3.png $(PNG2ARC_DEPS)
 	$(MKDIR_P) "./build"
-	$(PYTHON2) $(PNG2ARC_FONT) -o $@ --glyph-dim 16 16 $< 9
+	$(PYTHON2) $(PNG2ARC_FONT) -o $@ --glyph-dim 16 16 --max-glyphs 59 $< 9
 
 ##########################################################################
 ##########################################################################

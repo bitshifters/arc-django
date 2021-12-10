@@ -946,7 +946,7 @@ palette_osword_block:
     ; (pad)
 
 scroller_text_string:
-	.byte "Hello World! This is probably the slowest scrolltext in the world.                    "
+	.byte "HELLO WORLD!! THIS IS PROBABLY THE SLOWEST SCROLLTEXT IN THE WORLD, BUT AT LEAST IT IS NOW USING THE CORRECT FONT.                    "
 	.byte 0
 	.align 4
 scroller_text_string_end:
@@ -1028,7 +1028,7 @@ menu_10_string:
 
 .align 4
 menu_11_string:
-	.byte 31, MENU_SONG_XPOS, 24, "CONCORDIA", 31, MENU_ARTIST_XPOS, 24, "BY MAZE", 0
+	.byte 31, MENU_SONG_XPOS, 24, "CONCORDIA", 31, MENU_ARTIST_XPOS, 24, "BY MA2E", 0
 
 .align 4
 menu_12_string:
