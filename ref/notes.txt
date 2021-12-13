@@ -37,27 +37,27 @@ No loading between tracks, so presume all decompressed in RAM.
 Check compression scheme, LZ4 or LHA?
 Use all OS-legal calls to run on as many machines as possible.
 
-Assets needed:
-- MODs!
-- Font redefinition 8x8 (regular & bold)
-- Scroller font and note sprites
-- Logo PNG
-- Scroll text
+Assets needed: 
+Y MODs!
+Y Font redefinition 8x8 (regular & bold)
+Y Scroller font and note sprites
+Y Logo PNG
+Y Scroll text
 
 To dos:
 - Set up new project and strip back - DONE(ish - could strip back more code)
 - (Ignore splash for now - assume this is decompression / easy to add later)
 - Menu screen layout
     - Top logo - DONE
-    - Menu area
-    - Scroll areas
-- Populate menu from data
+    - Menu area - DONE
+    - Scroll areas - DONE
+- Populate menu from data - DONE
 - Play a tune from RAM - DONE
 - Basic tune selection - DONE
-- Menu update and selection
-- Text scroller
+- Menu update and selection - DONE
+- Text scroller - DONE
 - Note scroller
-- Beat rasters - use QTM_ReadVULevels
+- Beat rasters - use QTM_ReadVULevels - DONE
 - Polish effects
     - Logo glitch
     - Menu highlights
@@ -67,3 +67,24 @@ Some of the very small chip tunes don't sound great in Arculator?
 Set QTM sample quality to maximum for a musicdisk! - DONE
 -> Actually this makes the chip samples sound worse!
 -> Much better left at default.
+
+Now have the correct assets:
+- Change text to custom plotting with reduced size font 8x7.
+- Implement scroller speed change & pause.
+- Add original scroller text.
+- Add sinewave note sprites.
+- Better vubars.
+- Check vertical alignment of all elements.
+- Implement autoplay & toggle.
+- Fix mouse control to be absolute.
+- Add background colours & fades.
+- Logo glitch on 'load'.
+- Menu colour highlight polish.
+- Intro Rabenauge logo.
+- Add Bitshifters intro logo?
+- Extend scrolltext to include Bitshifters credits & greets.
+- Compress the overall exe as much as possible.
+- Make !folder icon.
+- Add readme to the build.
+- Nice fade on escape / exit?
+- Test all on real hardware!

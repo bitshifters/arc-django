@@ -595,7 +595,8 @@ plot_menu:
 	str lr, [sp, #-4]!
 	.if _DEBUG
 	adr r0, menu_debug
-	swi OS_WriteO
+;	swi OS_WriteO
+	bl small_font_plot_string
 	.endif
 	mov r3, #MAX_SONGS
 	.1:
@@ -604,19 +605,27 @@ plot_menu:
 	bpl .1
 	ldr pc, [sp], #4
 
-; R3=item #
+; R3=item # (preserved)
 plot_menu_item:
+	str lr, [sp, #-4]!
 	ldr r1, song_number
 	cmp r3, r1
 	adreq r0, menu_playing
 	adrne r0, menu_setup
-	swi OS_WriteO
+;	swi OS_WriteO
+	bl small_font_plot_string
+	ldr lr, [sp], #4
+
+; Fall through!
+; TODO: This is annoying. Please fix!
 plot_menu_item_ex:
+	str lr, [sp, #-4]!
 	adr r2, menu_table
 	ldr r1, [r2, r3, lsl #2]	; r0 * 4
 	add r0, r1, r2				; string address
-	swi OS_WriteO
-	mov pc, lr
+	bl small_font_plot_string
+;	swi OS_WriteO
+	ldr pc, [sp], #4
 
 ; ============================================================================
 ; Scroller
@@ -896,6 +905,7 @@ plot_horizontal_line:
 ; Additional code modules
 ; ============================================================================
 
+.include "src/small-font-plot.asm"
 .include "lib/mode9-palette.asm"
 .include "lib/mode9-screen.asm"
 .include "lib/lz4-decode.asm"
@@ -1058,6 +1068,10 @@ music_table:
 	.long music_11_mod - music_table
 
 .align 4
+scroller_font_data:
+.incbin "build/scroller_font.bin"
+
+.align 4
 music_01_mod:
 .incbin "build/music_01.bin"
 
@@ -1100,10 +1114,6 @@ music_10_mod:
 .align 4
 music_11_mod:
 .incbin "build/music_11.bin"
-
-.align 4
-scroller_font_data:
-.incbin "build/scroller_font.bin"
 
 ; ============================================================================
 ; BSS Segment
