@@ -44,7 +44,7 @@ small_font_plot_string:
     mov r11, r12
 
     ; Set default colour to white.
-    ; TODO: Could remember colour.
+    ; TODO: Could remember colour. Just set directly from code.
     mov r10, #0xff
     orr r10, r10, r10, lsl #8
     orr r10, r10, r10, lsl #16
@@ -58,11 +58,9 @@ small_font_plot_string:
     cmp r0, #VDU_SetPos
     bne .2
 
-    ; Set Pos - next two bytes are (column,row)
+    ; Set Pos - next two bytes are (column,line)
     ldrb r1, [r6], #1
     ldrb r2, [r6], #1
-
-    mov r2, r2, lsl #3          ; line = row * 8
 
     add r11, r12, r2, lsl #7    ; line * 128
     add r11, r11, r2, lsl #5    ; + line * 32 = line * 160
@@ -132,7 +130,7 @@ small_font_plot_glyph:
     tst r2, #0b10000000
     orrne r3, r3, #0x0000000f
 
-    ;and r3, r3, r10                 ; mask in colour / data.
+    and r3, r3, r10                 ; mask in colour / data.
     str r3, [r8], #Screen_Stride    ; next line.
 
     subs r7, r7, #1

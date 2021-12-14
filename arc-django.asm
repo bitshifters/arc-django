@@ -18,13 +18,17 @@
 
 .equ Scroller_Glyph_Width, 16
 .equ Scroller_Glyph_Height, 16
-.equ Scroller_Y_Pos, 240
+.equ Scroller_Y_Pos, 237
 
 .equ VU_Bars_Y_Pos, 216
-.equ VU_Bars_Height, 4
-.equ VU_Bars_Gap, 5
+.equ VU_Bars_Height, 3
+.equ VU_Bars_Gap, 4
 .equ VU_Bars_Effect, 2	; 'effect'
 .equ VU_Bars_Gravity, 1	; lines per vsync
+
+.equ Horizontal_Divider_1, 98
+.equ Horizontal_Divider_2, 202
+.equ Horizontal_Divider_3, 233
 
 .equ Mouse_Sensitivity, 10
 
@@ -132,6 +136,8 @@ main:
 	bl unlz4
 
 	; Draw menu to screen.
+	bl plot_dividers
+
 	bl plot_menu
 
 	; Start with song #0.
@@ -593,11 +599,6 @@ play_song:
 
 plot_menu:
 	str lr, [sp, #-4]!
-	.if _DEBUG
-	adr r0, menu_debug
-;	swi OS_WriteO
-	bl small_font_plot_string
-	.endif
 	mov r3, #MAX_SONGS
 	.1:
 	bl plot_menu_item
@@ -607,24 +608,18 @@ plot_menu:
 
 ; R3=item # (preserved)
 plot_menu_item:
-	str lr, [sp, #-4]!
+	mov r0, #0
 	ldr r1, song_number
 	cmp r3, r1
-	adreq r0, menu_playing
-	adrne r0, menu_setup
-;	swi OS_WriteO
-	bl small_font_plot_string
-	ldr lr, [sp], #4
-
+	moveq r0, #SmallFont_BoldBase
+	str r0, small_font_bold_flag
 ; Fall through!
-; TODO: This is annoying. Please fix!
 plot_menu_item_ex:
 	str lr, [sp, #-4]!
 	adr r2, menu_table
 	ldr r1, [r2, r3, lsl #2]	; r0 * 4
 	add r0, r1, r2				; string address
 	bl small_font_plot_string
-;	swi OS_WriteO
 	ldr pc, [sp], #4
 
 ; ============================================================================
@@ -861,6 +856,39 @@ update_vu_bars:
 
 	ldr pc, [sp], #4
 
+; TODO: Feels like duped code here.
+plot_dividers:
+	str lr, [sp, #-4]!
+
+	mov r1, #-1
+	mov r2, r1
+	mov r3, r1
+	mov r4, r1
+	mov r5, r1
+	mov r6, r1
+	mov r7, r1
+	mov r8, r1
+
+	ldr r12, screen_addr
+
+	mov r0, #Horizontal_Divider_1
+	add r9, r12, r0, lsl #7	; y*128
+	add r9, r9, r0, lsl #5	; +y*32 = y*160
+	bl plot_horizontal_line
+
+	mov r0, #Horizontal_Divider_2
+	add r9, r12, r0, lsl #7	; y*128
+	add r9, r9, r0, lsl #5	; +y*32 = y*160
+	bl plot_horizontal_line
+
+	mov r0, #Horizontal_Divider_3
+	add r9, r12, r0, lsl #7	; y*128
+	add r9, r9, r0, lsl #5	; +y*32 = y*160
+	bl plot_horizontal_line
+
+	ldr pc, [sp], #4
+
+
 ; R10 = value (0-64).
 ; R11 = y pos on screen.
 ; Preserve R0 please.
@@ -978,13 +1006,8 @@ menu_table:
 
 .equ MENU_SONG_XPOS, 3
 .equ MENU_ARTIST_XPOS, 23
-
-.if _DEBUG
-.align 4
-menu_debug:
-	.byte 17, 6		; define text colour 6
-	.byte 31, MENU_SONG_XPOS, 13, "!!!! NOT THE CORRECT FONTS !!!!", 0
-.endif
+.equ MENU_TOP_YPOS, 114
+.equ MENU_ROW_HEIGHT, 7
 
 .align 4
 menu_setup:
@@ -998,52 +1021,52 @@ menu_playing:
 
 .align 4
 menu_01_string:
-	.byte 31, MENU_SONG_XPOS, 14, "SWITCHING LANES", 31, MENU_ARTIST_XPOS, 14, "BY JUICE", 0
+	.byte 31, MENU_SONG_XPOS, MENU_TOP_YPOS, "SWITCHING LANES", 31, MENU_ARTIST_XPOS, MENU_TOP_YPOS, "BY JUICE", 0
 
 .align 4
 menu_02_string:
-	.byte 31, MENU_SONG_XPOS, 15, "BRATGRUMBEERE", 31, MENU_ARTIST_XPOS, 15, "BY VIRGILL", 0
+	.byte 31, MENU_SONG_XPOS, MENU_TOP_YPOS+1*MENU_ROW_HEIGHT, "BRATGRUMBEERE", 31, MENU_ARTIST_XPOS, MENU_TOP_YPOS+1*MENU_ROW_HEIGHT, "BY VIRGILL", 0
 
 .align 4
 menu_03_string:
-	.byte 31, MENU_SONG_XPOS, 16, "RED DROPS", 31, MENU_ARTIST_XPOS, 16, "BY OKEANOS", 0
+	.byte 31, MENU_SONG_XPOS, MENU_TOP_YPOS+2*MENU_ROW_HEIGHT, "RED DROPS", 31, MENU_ARTIST_XPOS, MENU_TOP_YPOS+2*MENU_ROW_HEIGHT, "BY OKEANOS", 0
 
 .align 4
 menu_04_string:
-	.byte 31, MENU_SONG_XPOS, 17, "AMIGA FUNERAL", 31, MENU_ARTIST_XPOS, 17, "BY VIRGILL", 0
+	.byte 31, MENU_SONG_XPOS, MENU_TOP_YPOS+3*MENU_ROW_HEIGHT, "AMIGA FUNERAL", 31, MENU_ARTIST_XPOS, MENU_TOP_YPOS+3*MENU_ROW_HEIGHT, "BY VIRGILL", 0
 
 .align 4
 menu_05_string:
-	.byte 31, MENU_SONG_XPOS, 18, "A VIRAG ELSZARADT", 31, MENU_ARTIST_XPOS, 18, "BY DALEZY", 0
+	.byte 31, MENU_SONG_XPOS, MENU_TOP_YPOS+4*MENU_ROW_HEIGHT, "A VIRAG ELSZARADT", 31, MENU_ARTIST_XPOS, MENU_TOP_YPOS+4*MENU_ROW_HEIGHT, "BY DALEZY", 0
 
 .align 4
 menu_06_string:
-	.byte 31, MENU_SONG_XPOS, 19, "PAWS AND CLAWS", 31, MENU_ARTIST_XPOS, 19, "BY SLASH", 0
+	.byte 31, MENU_SONG_XPOS, MENU_TOP_YPOS+5*MENU_ROW_HEIGHT, "PAWS AND CLAWS", 31, MENU_ARTIST_XPOS, MENU_TOP_YPOS+5*MENU_ROW_HEIGHT, "BY SLASH", 0
 
 .align 4
 menu_07_string:
-	.byte 31, MENU_SONG_XPOS, 20, "RESURGENCE", 31, MENU_ARTIST_XPOS, 20, "BY VEDDER", 0
+	.byte 31, MENU_SONG_XPOS, MENU_TOP_YPOS+6*MENU_ROW_HEIGHT, "RESURGENCE", 31, MENU_ARTIST_XPOS, MENU_TOP_YPOS+6*MENU_ROW_HEIGHT, "BY VEDDER", 0
 
 .align 4
 menu_08_string:
-	.byte 31, MENU_SONG_XPOS, 21, "QUICKSHOT DRAMAKING", 31, MENU_ARTIST_XPOS, 21, "BY CURT COOL", 0
+	.byte 31, MENU_SONG_XPOS, MENU_TOP_YPOS+7*MENU_ROW_HEIGHT, "QUICKSHOT DRAMAKING", 31, MENU_ARTIST_XPOS, MENU_TOP_YPOS+7*MENU_ROW_HEIGHT, "BY CURT COOL", 0
 
 .align 4
 menu_09_string:
-	.byte 31, MENU_SONG_XPOS, 22, "SYNCOPATED GROOVE", 31, MENU_ARTIST_XPOS, 22, "BY OKEANOS", 0
+	.byte 31, MENU_SONG_XPOS, MENU_TOP_YPOS+8*MENU_ROW_HEIGHT, "SYNCOPATED GROOVE", 31, MENU_ARTIST_XPOS, MENU_TOP_YPOS+8*MENU_ROW_HEIGHT, "BY OKEANOS", 0
 
 .align 4
 menu_10_string:
-	.byte 31, MENU_SONG_XPOS, 23, "PAULA AT THE DISCO", 31, MENU_ARTIST_XPOS, 23, "BY TRIACE", 0
+	.byte 31, MENU_SONG_XPOS, MENU_TOP_YPOS+9*MENU_ROW_HEIGHT, "PAULA AT THE DISCO", 31, MENU_ARTIST_XPOS, MENU_TOP_YPOS+9*MENU_ROW_HEIGHT, "BY TRIACE", 0
 
 .align 4
 menu_11_string:
-	.byte 31, MENU_SONG_XPOS, 24, "CONCORDIA", 31, MENU_ARTIST_XPOS, 24, "BY MA2E", 0
+	.byte 31, MENU_SONG_XPOS, MENU_TOP_YPOS+10*MENU_ROW_HEIGHT, "CONCORDIA", 31, MENU_ARTIST_XPOS, MENU_TOP_YPOS+10*MENU_ROW_HEIGHT, "BY MA2E", 0
 
 .align 4
 menu_12_string:
 	.byte 17, 8		; define text colour 8
-	.byte 31, 32, 25, "AUTOPLAY", 0
+	.byte 31, 32, MENU_TOP_YPOS+11*MENU_ROW_HEIGHT, "AUTOPLAY", 0
 
 .align 4
 logo_pal_block:
