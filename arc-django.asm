@@ -16,8 +16,6 @@
 .equ Screen_Bytes, Screen_Stride*Screen_Height
 .equ Mode_Bytes, Screen_Stride*Mode_Height
 
-.equ Scroller_Glyph_Width, 16
-.equ Scroller_Glyph_Height, 16
 .equ Scroller_Y_Pos, 237
 
 .equ VU_Bars_Y_Pos, 216
@@ -623,208 +621,6 @@ plot_menu_item_ex:
 	ldr pc, [sp], #4
 
 ; ============================================================================
-; Scroller
-; ============================================================================
-
-scroller_update:
-	str lr, [sp, #-4]!
-
-	; next column index
-	ldr r0, scroller_cur_column
-	add r0, r0, #1
-	cmp r0, #Scroller_Glyph_Width
-	; next string char?
-	blge get_next_char
-	str r0, scroller_cur_column
-
-	; next glyph word?
-	ands r1, r0, #7		; 8 pixels per word
-
-	;   copy glyph word to a buffer
-	bleq get_next_glyph_word
-
-	; scroll the row
-	bl scroller_scroll_row
-	ldr pc, [sp], #4
-
-get_next_char:
-	ldr r10, scroller_text_ptr
-	.1:
-	ldrb r0, [r10], #1
-	cmp r0, #0
-	beq .2
-	str r10, scroller_text_ptr
-
-	adr r9, scroller_font_data
-	sub r0, r0, #32	; start at ' '
-	; TODO: Multiply by constant macros.
-	add r9, r9, r0, lsl #7		; *128 bytes per glyph.
-	str r9, scroller_glyph_data_ptr
-	mov r0, #0	; cur_column
-	mov pc, lr
-
-.2:
-	adr r10, scroller_text_string
-	b .1
-
-; r0=column
-get_next_glyph_word:
-	ldr r9, scroller_glyph_data_ptr
-	adr r10, scroller_glyph_column_buffer
-
-	mov r0, r0, lsr #3	; div 8 to get column.
-	add r9, r9, r0, lsl #2	; *4 to get word.
-	mov r1, #Scroller_Glyph_Height
-	.1:
-	ldr r2, [r9], #Scroller_Glyph_Width/2	; stride.
-	str r2, [r10], #4
-	subs r1, r1, #1
-	bne .1
-	mov pc, lr
-
-scroller_scroll_row:
-	str lr, [sp, #-4]!
-
-	; set border colour!
-	.if _DEBUG_RASTERS
-	adr r0, vdu_set_border_red
-	mov r1, #6
-	swi OS_WriteN
-	.endif
-
-	ldr r12, screen_addr
-	mov r0, #Scroller_Y_Pos
-	add r12, r12, r0, lsl #7	; y*128
-	add r12, r12, r0, lsl #5	; +y*32 = y*160
-
-	mov r11, #0
-	.1:
-	adr r0, scroller_glyph_column_buffer
-	ldr r10, [r0, r11, lsl #2]	; r10=scroller_glyph_column_buffer[r11]
-	bl scroller_scroll_line
-	adr r0, scroller_glyph_column_buffer
-	str r10, [r0, r11, lsl #2]	; scroller_glyph_column_buffer[r11]=r10
-	add r11, r11, #1
-	cmp r11, #Scroller_Glyph_Height
-	blt .1
-
-	; set border colour!
-	.if _DEBUG_RASTERS
-	adr r0, vdu_set_border_black
-	mov r1, #6
-	swi OS_WriteN
-	.endif
-	ldr pc, [sp], #4
-
-; R12=screen_addr, R11=line number, R10=right hand word
-scroller_scroll_line:
-	add r9, r12, r11, lsl #7	; y*128
-	add r9, r9, r11, lsl #5	; +y*32 = y*160
-
-	ldmia r9, {r0-r8}		; read 9 words = 36 bytes = 72 pixels
-	; shift word right 4 bits to clear left most pixel
-	mov r0, r0, lsr #4		; word0 >> 4
-	; mask in right most pixel from next word
-	orr r0, r0, r1, lsl #28		; word0 |= word1 << 28
-	mov r1, r1, lsr #4
-	orr r1, r1, r2, lsl #28
-	mov r2, r2, lsr #4
-	orr r2, r2, r3, lsl #28
-	mov r3, r3, lsr #4
-	orr r3, r3, r4, lsl #28
-	mov r4, r4, lsr #4
-	orr r4, r4, r5, lsl #28
-	mov r5, r5, lsr #4
-	orr r5, r5, r6, lsl #28
-	mov r6, r6, lsr #4
-	orr r6, r6, r7, lsl #28
-	mov r7, r7, lsr #4
-	orr r7, r7, r8, lsl #28
-	stmia r9!, {r0-r7}		; write 8 words = 32 bytes = 64 pixels
-
-	ldmia r9, {r0-r8}		; read 9 words = 36 bytes = 72 pixels
-	mov r0, r0, lsr #4
-	orr r0, r0, r1, lsl #28
-	mov r1, r1, lsr #4
-	orr r1, r1, r2, lsl #28
-	mov r2, r2, lsr #4
-	orr r2, r2, r3, lsl #28
-	mov r3, r3, lsr #4
-	orr r3, r3, r4, lsl #28
-	mov r4, r4, lsr #4
-	orr r4, r4, r5, lsl #28
-	mov r5, r5, lsr #4
-	orr r5, r5, r6, lsl #28
-	mov r6, r6, lsr #4
-	orr r6, r6, r7, lsl #28
-	mov r7, r7, lsr #4
-	orr r7, r7, r8, lsl #28
-	stmia r9!, {r0-r7}		; write 8 words = 32 bytes = 64 pixels
-
-	ldmia r9, {r0-r8}		; read 9 words = 36 bytes = 72 pixels
-	mov r0, r0, lsr #4
-	orr r0, r0, r1, lsl #28
-	mov r1, r1, lsr #4
-	orr r1, r1, r2, lsl #28
-	mov r2, r2, lsr #4
-	orr r2, r2, r3, lsl #28
-	mov r3, r3, lsr #4
-	orr r3, r3, r4, lsl #28
-	mov r4, r4, lsr #4
-	orr r4, r4, r5, lsl #28
-	mov r5, r5, lsr #4
-	orr r5, r5, r6, lsl #28
-	mov r6, r6, lsr #4
-	orr r6, r6, r7, lsl #28
-	mov r7, r7, lsr #4
-	orr r7, r7, r8, lsl #28
-	stmia r9!, {r0-r7}		; write 8 words = 32 bytes = 64 pixels
-
-	ldmia r9, {r0-r8}		; read 9 words = 36 bytes = 72 pixels
-	mov r0, r0, lsr #4
-	orr r0, r0, r1, lsl #28
-	mov r1, r1, lsr #4
-	orr r1, r1, r2, lsl #28
-	mov r2, r2, lsr #4
-	orr r2, r2, r3, lsl #28
-	mov r3, r3, lsr #4
-	orr r3, r3, r4, lsl #28
-	mov r4, r4, lsr #4
-	orr r4, r4, r5, lsl #28
-	mov r5, r5, lsr #4
-	orr r5, r5, r6, lsl #28
-	mov r6, r6, lsr #4
-	orr r6, r6, r7, lsl #28
-	mov r7, r7, lsr #4
-	orr r7, r7, r8, lsl #28
-	stmia r9!, {r0-r7}		; write 8 words = 32 bytes = 64 pixels
-
-	ldmia r9, {r0-r7}		; read 8 words = 32 bytes = 64 pixels
-	mov r0, r0, lsr #4
-	orr r0, r0, r1, lsl #28
-	mov r1, r1, lsr #4
-	orr r1, r1, r2, lsl #28
-	mov r2, r2, lsr #4
-	orr r2, r2, r3, lsl #28
-	mov r3, r3, lsr #4
-	orr r3, r3, r4, lsl #28
-	mov r4, r4, lsr #4
-	orr r4, r4, r5, lsl #28
-	mov r5, r5, lsr #4
-	orr r5, r5, r6, lsl #28
-	mov r6, r6, lsr #4
-	orr r6, r6, r7, lsl #28
-	mov r7, r7, lsr #4
-	orr r7, r7, r10, lsl #28	; new data word
-	stmia r9!, {r0-r7}		; write 8 words = 32 bytes = 64 pixels
-
-	mov r10, r10, lsr #4		; rotate new data word
-	mov pc, lr
-
-scroller_glyph_column_buffer:
-	.skip Scroller_Glyph_Height * 4
-
-; ============================================================================
 ; VU bars
 ; ============================================================================
 
@@ -933,6 +729,7 @@ plot_horizontal_line:
 ; Additional code modules
 ; ============================================================================
 
+.include "src/scroller.asm"
 .include "src/small-font-plot.asm"
 .include "lib/mode9-palette.asm"
 .include "lib/mode9-screen.asm"
@@ -949,15 +746,6 @@ selection_number:
 	.long 0
 
 selection_colour:
-	.long 0
-
-scroller_text_ptr:
-	.long scroller_text_string_end-1
-
-scroller_cur_column:
-	.long 15
-
-scroller_glyph_data_ptr:
 	.long 0
 
 vdu_disable_cursor:
@@ -984,8 +772,7 @@ palette_osword_block:
     ; (pad)
 
 scroller_text_string:
-	.byte "HELLO WORLD!! THIS IS PROBABLY THE SLOWEST SCROLLTEXT IN THE WORLD, BUT AT LEAST IT IS NOW USING THE CORRECT FONT.                    "
-	.byte 0
+	.include "src/scrolltxt-final.asm"
 	.align 4
 scroller_text_string_end:
 

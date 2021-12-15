@@ -69,12 +69,12 @@ Set QTM sample quality to maximum for a musicdisk! - DONE
 -> Much better left at default.
 
 Now have the correct assets:
-- Change text to custom plotting with reduced size font 8x7.
-- Implement scroller speed change & pause.
-- Add original scroller text.
+- Change text to custom plotting with reduced size font 8x7. - DONE
+- Implement scroller speed change & pause. - DONE
+- Add original scroller text. - DONE
 - Add sinewave note sprites.
 - Better vubars.
-- Check vertical alignment of all elements.
+- Check vertical alignment of all elements. - MOSTLY DONE
 - Implement autoplay & toggle.
 - Fix mouse control to be absolute.
 - Add background colours & fades.
@@ -83,6 +83,7 @@ Now have the correct assets:
 - Intro Rabenauge logo.
 - Add Bitshifters intro logo?
 - Extend scrolltext to include Bitshifters credits & greets.
+- Remove dead code and tidy up code into separate files.
 - Compress the overall exe as much as possible.
 - Make !folder icon.
 - Add readme to the build.
