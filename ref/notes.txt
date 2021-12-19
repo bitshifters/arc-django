@@ -11,6 +11,7 @@ Menu screen:
 - Fade in (at least on the ST version)
 - Chip Django logo fixed at top
 - Logo glitches (deliberately!) when a new tune is selected
+    - Just 8 pixel shifts of each line.
 
 - Menu with 11 entries, fixed - 8x7 pixel font...
 - First tune begins playing immediately
@@ -72,9 +73,10 @@ Now have the correct assets:
 - Change text to custom plotting with reduced size font 8x7. - DONE
 - Implement scroller speed change & pause. - DONE
 - Add original scroller text. - DONE
-- Add sinewave note sprites.
-- Better vubars.
-- Check vertical alignment of all elements. - MOSTLY DONE
+- Add sinewave note sprites. - DONE
+- Add sprite masking and randomise next note.
+- Better vubars?
+- Check vertical alignment of all elements. - DONE
 - Implement autoplay & toggle.
 - Fix mouse control to be absolute.
 - Add background colours & fades.

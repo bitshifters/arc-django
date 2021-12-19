@@ -180,30 +180,17 @@ main_loop:
 	; do VU bars.
 	bl update_vu_bars
 
-	mov r0, #0
-	mov r1, #VU_Bars_Y_Pos
-	adr r2, note_sprite_data
-	bl plot_sprite
-
-	mov r0, #33
-	mov r1, #VU_Bars_Y_Pos
-	adr r2, note_sprite_data+128
-	bl plot_sprite
-
-	mov r0, #66
-	mov r1, #VU_Bars_Y_Pos
-	adr r2, note_sprite_data+128*2
-	bl plot_sprite
-
-	mov r0, #99
-	mov r1, #VU_Bars_Y_Pos
-	adr r2, note_sprite_data+128*3
-	bl plot_sprite
-
-	mov r0, #132
-	mov r1, #VU_Bars_Y_Pos
-	adr r2, note_sprite_data+128*4
-	bl plot_sprite
+	.if _DEBUG_RASTERS
+	adr r0, vdu_set_border_green
+	mov r1, #6
+	swi OS_WriteN
+	.endif
+	bl update_sprites
+	.if _DEBUG_RASTERS
+	adr r0, vdu_set_border_black
+	mov r1, #6
+	swi OS_WriteN
+	.endif
 
 	bl keyboard_scan_debounced
 
@@ -341,6 +328,15 @@ prev_mouse_y:
 mouse_delta_y:
 	.long 0
 
+song_number:
+	.long -1
+
+selection_number:
+	.long 0
+
+selection_colour:
+	.long 0
+
 error_noscreenmem:
 	.long 0
 	.byte "Cannot allocate screen memory!"
@@ -425,9 +421,6 @@ get_screen_addr:
 	
 screen_addr_input:
 	.long VD_ScreenStart, -1
-
-screen_addr:
-	.long 0					; ptr to the current VIDC screen bank being written to.
 
 exit:	
 	; wait for vsync (any pending buffers)
@@ -674,6 +667,15 @@ update_vu_bars:
 	mov r11, #VU_Bars_Y_Pos + 3 * VU_Bars_Gap
 	bl plot_vu_bar
 
+	; Some fake bars to blank the sprites.
+	mov r10, #0
+	mov r11, #VU_Bars_Y_Pos - 2 * VU_Bars_Gap
+	bl plot_vu_bar
+
+	mov r10, #0
+	mov r11, #VU_Bars_Y_Pos - 1 * VU_Bars_Gap
+	bl plot_vu_bar
+
 	ldr pc, [sp], #4
 
 ; TODO: Feels like duped code here.
@@ -737,6 +739,19 @@ plot_vu_bar:
 	bl plot_horizontal_line
 	.endr
 
+	mov r1, #0
+	mov r2, r1
+	mov r3, r1
+	mov r4, r1
+	mov r5, r1
+	mov r6, r1
+	mov r7, r1
+	mov r8, r1
+	
+	.rept VU_Bars_Gap-VU_Bars_Height
+	bl plot_horizontal_line
+	.endr
+
 	ldr pc, [sp], #4
 
 ; R9 = ptr to start of line.
@@ -753,6 +768,9 @@ plot_horizontal_line:
 ; Additional code modules
 ; ============================================================================
 
+screen_addr:
+	.long 0					; ptr to the current VIDC screen bank being written to.
+
 .include "src/scroller.asm"
 .include "src/small-font-plot.asm"
 .include "src/sprites.asm"
@@ -764,21 +782,16 @@ plot_horizontal_line:
 ; Data Segment
 ; ============================================================================
 
-song_number:
-	.long -1
-
-selection_number:
-	.long 0
-
-selection_colour:
-	.long 0
-
 vdu_disable_cursor:
 .byte 23,1,0,0,0,0,0,0,0,0
 .align 4
 
 vdu_set_border_red:
 .byte 19,0,24,255,0,0
+.align 4
+
+vdu_set_border_green:
+.byte 19,0,24,0,255,0
 .align 4
 
 vdu_set_border_black:

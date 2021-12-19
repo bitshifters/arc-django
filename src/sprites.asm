@@ -7,9 +7,47 @@
 .equ Sprites_Num, 5
 
 .equ Sprite_X_Pos, 0
-.equ Sprite_Y_pos, 4
 .equ Sprite_Data_Ptr, 8
-.equ Sprite_Size, 16
+.equ Sprite_Block_Size, 8
+
+.equ Note_Left_Edge, 0
+.equ Note_Right_Edge, Screen_Width - Sprite_Width
+.equ Note_Y_Adjust, 42
+
+update_sprites:
+	str lr, [sp, #-4]!
+    ldr r12, screen_addr
+
+    adr r11, sprite_blocks
+    adr r9, sinus
+
+    mov r10, #0
+.1:
+    ; Load sprite block: R0=X, R1=Y, R2=Data ptr.
+    ldmia r11, {r0,r2}
+
+    ; Move sprite left.
+    sub r0, r0, #1
+    cmp r0, #Note_Left_Edge
+    movle r0, #Note_Right_Edge
+
+    ; Calculate Y pos on sinewave.
+    add r3, r0, r10, lsl #4
+    and r3, r3, #0x3f
+    ldr r1, [r9, r3, lsl #2]
+    sub r1, r1, #Note_Y_Adjust
+    stmia r11!, {r0,r2}
+
+    stmfd sp!, {r9-r11}
+    bl plot_sprite
+    ldmfd sp!, {r9-r11}
+
+    add r10, r10, #1
+    cmp r10, #Sprites_Num
+    bne .1
+
+	ldr pc, [sp], #4
+
 
 ; R0=X, R1=Y, R2=data ptr, R12=screen addr
 plot_sprite:
@@ -121,3 +159,17 @@ plot_sprite:
     blt .1
 
     mov pc, lr
+
+sprite_blocks:
+    .long 0, note_sprite_data+0
+    .long 64, note_sprite_data+128
+    .long 128, note_sprite_data+2*128
+    .long 192, note_sprite_data+3*128
+    .long 256, note_sprite_data+4*128
+
+sinus:
+    ; Could turn these into bytes but we 1/4'd the table anyway.
+     .long 0xfe,0xfe,0xff,0xff,0x100,0x100,0x101,0x101,0x101,0x101,0x102,0x102,0x102,0x102,0x102,0x102
+     .long 0x102,0x102,0x102,0x102,0x102,0x102,0x102,0x101,0x101,0x101,0x100,0x100,0x100,0xff,0xff,0xfe
+     .long 0xfe,0xfe,0xfd,0xfd,0xfc,0xfc,0xfb,0xfb,0xfb,0xfa,0xfa,0xfa,0xfa,0xfa,0xfa,0xfa
+     .long 0xfa,0xfa,0xfa,0xfa,0xfa,0xfa,0xfa,0xfb,0xfb,0xfb,0xfc,0xfc,0xfc,0xfd,0xfd,0xfe
