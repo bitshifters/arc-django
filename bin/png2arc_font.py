@@ -4,6 +4,10 @@ import png,argparse,sys,math,arc
 ##########################################################################
 ##########################################################################
 
+# Read 1 byte from our input file
+def get_byte(file):
+    return ord(file.read(1))
+
 def save_file(data,path):
     if path is not None:
         with open(path,'wb') as f:
@@ -25,7 +29,22 @@ def get_palette(boxed_row_flat_pixel):
 ##########################################################################
 ##########################################################################
 
-def to_box_row_palette_indices(boxed_row_flat_pixel, palette):
+def find_closest_match(palette, rgb):
+    # Do this the lame non-Pythonic way. I'm sure this could be a single line blah blah.
+    closest_idx = -1
+    closest_dist = 256*256
+    for i in range(16):
+        col = palette[i]
+        dist = (rgb[0]-col[0])*(rgb[0]-col[0])
+        + (rgb[1]-col[1])*(rgb[1]-col[2])
+        + (rgb[2]-col[2])*( rgb[2]-col[2])
+        if dist < closest_dist:
+            closest_idx = i
+            closest_dist = dist
+
+    return closest_idx
+
+def to_box_row_palette_indices(boxed_row_flat_pixel, palette, closest_match):
     pidxs = []
     for row in boxed_row_flat_pixel:
         pidxs.append([])
@@ -33,7 +52,11 @@ def to_box_row_palette_indices(boxed_row_flat_pixel, palette):
             rgb = [row[i+0],row[i+1],row[i+2]]
             # Prefer towards the end of the palette?
             # Probably unless zero?
-            idx_last = len(palette) - palette[::-1].index(rgb) - 1
+            try:
+                idx_last = len(palette) - palette[::-1].index(rgb) - 1
+            except:
+                idx_last = find_closest_match(palette, rgb)
+
             pidxs[-1].append(idx_last)
 
     return pidxs
@@ -57,31 +80,51 @@ def main(options):
     print 'Source image width: {0} height: {1}.'.format(src_width,src_height)
 
     palette = get_palette(png_result[2])
-    print 'Found {0} palette entries.'.format(len(palette))
+    print 'Found {0} palette entries in source image.'.format(len(palette))
     
     if len(palette) > 16:
         print>>sys.stderr,'FATAL: too many colours: %d.'%len(palette)
         sys.exit(1)
 
-    # Sort palette by intensity.
-    palette.sort(key=lambda e: e[0]*e[0]+e[1]*e[1]+e[2]*e[2])
+    if options.use_palette is not None:
+        # Open palette binary file.
+        palette_file = open(options.use_palette, 'rb')
 
-    if len(palette) < 16:
-        # Prefer entry 0 to be black, if not already.
-        if palette[0] != [0, 0, 0]:
-            palette.insert(0, [0, 0, 0])
+        palette=[]
+        for i in range(16):
+            r = get_byte(palette_file)
+            g = get_byte(palette_file)
+            b = get_byte(palette_file)
+            a = get_byte(palette_file)
+            palette.append([r, g, b])
+
+    else:
+        # Sort palette by (greyscale) intensity.
+        # palette.sort(key=lambda e: e[0]*e[0]+e[1]*e[1]+e[2]*e[2])
+        palette.sort(key=lambda e: 0.299*e[0] + 0.587*e[1] + 0.114*e[2])
+
+
+        if len(palette) < 16:
+            # Prefer entry 0 to be black, if not already.
+            if palette[0] != [0, 0, 0]:
+                palette.insert(0, [0, 0, 0])
+
+        # Prefer last entry to be white, if not already.
+        if len(palette) < 16:
+            if palette[-1] != [255, 255, 255]:
+                palette.append([255, 255, 255])
 
         # Pad end of palette with white:
         while len(palette) < 16:
             palette.append([255, 255, 255])
 
-    # Reading the file again seems wrong?
+    # Reading the file again seems wrong? This is OK now we have a separate palette?
     png_result=png.Reader(filename=options.input_path).asRGBA8()
 
     if options.loud:
         print(palette)
         
-    pixels = to_box_row_palette_indices(png_result[2], palette)
+    pixels = to_box_row_palette_indices(png_result[2], palette, options.closest_match)
     assert(len(pixels)==src_height)
 
     print 'Glyph dimensions {0} x {1} pixels.'.format(options.glyph_dim[0], options.glyph_dim[1])
@@ -155,6 +198,8 @@ if __name__=='__main__':
                         default=None,
                         type=int,
                         help='maximum number of glyphs to save')
+    parser.add_argument('--use-palette',dest='use_palette',metavar='FILE',help='use palette binary data from %(metavar)s')
+    parser.add_argument('--closest-match',action='store_true',help='match closest entry in palette if not exact.')
     parser.add_argument('input_path',metavar='FILE',help='load PNG data from %(metavar)s')
     parser.add_argument('mode',type=int,help='screen mode')
     main(parser.parse_args())

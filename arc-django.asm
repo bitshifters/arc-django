@@ -135,7 +135,6 @@ main:
 
 	; Draw menu to screen.
 	bl plot_dividers
-
 	bl plot_menu
 
 	; Start with song #0.
@@ -180,6 +179,31 @@ main_loop:
 
 	; do VU bars.
 	bl update_vu_bars
+
+	mov r0, #0
+	mov r1, #VU_Bars_Y_Pos
+	adr r2, note_sprite_data
+	bl plot_sprite
+
+	mov r0, #33
+	mov r1, #VU_Bars_Y_Pos
+	adr r2, note_sprite_data+128
+	bl plot_sprite
+
+	mov r0, #66
+	mov r1, #VU_Bars_Y_Pos
+	adr r2, note_sprite_data+128*2
+	bl plot_sprite
+
+	mov r0, #99
+	mov r1, #VU_Bars_Y_Pos
+	adr r2, note_sprite_data+128*3
+	bl plot_sprite
+
+	mov r0, #132
+	mov r1, #VU_Bars_Y_Pos
+	adr r2, note_sprite_data+128*4
+	bl plot_sprite
 
 	bl keyboard_scan_debounced
 
@@ -731,6 +755,7 @@ plot_horizontal_line:
 
 .include "src/scroller.asm"
 .include "src/small-font-plot.asm"
+.include "src/sprites.asm"
 .include "lib/mode9-palette.asm"
 .include "lib/mode9-screen.asm"
 .include "lib/lz4-decode.asm"
@@ -880,6 +905,14 @@ music_table:
 .align 4
 scroller_font_data:
 .incbin "build/scroller_font.bin"
+
+.align 4
+note_sprite_data:
+.incbin "build/note1.bin"
+.incbin "build/note2.bin"
+.incbin "build/note3.bin"
+.incbin "build/note4.bin"
+.incbin "build/note5.bin"
 
 .align 4
 music_01_mod:

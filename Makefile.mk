@@ -44,7 +44,9 @@ code: assets music
 	$(VASM) -L compile.txt -m250 -Fbin -opt-adr -o build\arc-django.bin arc-django.asm
 
 .PHONY:assets
-assets: ./build/logo.lz4 ./build/logo.bin.pal ./build/scroller_font.bin
+assets: ./build/logo.lz4 ./build/logo.bin.pal ./build/scroller_font.bin \
+	./build/note1.bin ./build/note2.bin ./build/note3.bin ./build/note4.bin \
+	./build/note5.bin
 
 .PHONY:music
 music: ./build/music_01.bin ./build/music_02.bin ./build/music_03.bin \
@@ -71,6 +73,26 @@ clean:
 ./build/scroller_font.bin: ./data/font/font3.png $(PNG2ARC_DEPS)
 	$(MKDIR_P) "./build"
 	$(PYTHON2) $(PNG2ARC_FONT) -o $@ --glyph-dim 16 16 --max-glyphs 59 $< 9
+
+./build/note1.bin: ./data/gfx/note1.png ./build/logo.bin $(PNG2ARC_DEPS)
+	$(MKDIR_P) "./build"
+	$(PYTHON2) $(PNG2ARC_FONT) -o $@ --glyph-dim 16 16 --max-glyphs 1 --use-palette ./build/logo.bin.pal --closest-match $< 9
+
+./build/note2.bin: ./data/gfx/note2.png $(PNG2ARC_DEPS)
+	$(MKDIR_P) "./build"
+	$(PYTHON2) $(PNG2ARC_FONT) -o $@ --glyph-dim 16 16 --max-glyphs 1 --use-palette ./build/logo.bin.pal --closest-match $< 9
+
+./build/note3.bin: ./data/gfx/note3.png $(PNG2ARC_DEPS)
+	$(MKDIR_P) "./build"
+	$(PYTHON2) $(PNG2ARC_FONT) -o $@ --glyph-dim 16 16 --max-glyphs 1 --use-palette ./build/logo.bin.pal --closest-match $< 9
+
+./build/note4.bin: ./data/gfx/note4.png $(PNG2ARC_DEPS)
+	$(MKDIR_P) "./build"
+	$(PYTHON2) $(PNG2ARC_FONT) -o $@ --glyph-dim 16 16 --max-glyphs 1 --use-palette ./build/logo.bin.pal --closest-match $< 9
+
+./build/note5.bin: ./data/gfx/note5.png $(PNG2ARC_DEPS)
+	$(MKDIR_P) "./build"
+	$(PYTHON2) $(PNG2ARC_FONT) -o $@ --glyph-dim 16 16 --max-glyphs 1 --use-palette ./build/logo.bin.pal --closest-match $< 9
 
 ##########################################################################
 ##########################################################################

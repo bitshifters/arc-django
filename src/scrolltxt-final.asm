@@ -4,7 +4,8 @@
 ; scrolltxt
 
 	.byte	2,4,"                            CHIP O       ",1,8
-	.byte    2,8,"                       DJANGO ONE     ",1,8	
+	.byte   2,8,"                       DJANGO ONE     ",1,8	
+
 	.byte	2,4,"                ",2,2,"  FINAL VERSION FROM RABENAUGE"
 	.byte    " AND THE GREAT COMPOSERS OF THE AMIGA SCENE.       DONE FOR THE DEADLINE PARTY 2021.         "
 	.byte	"            LOOK ALSO FOR THE ATARI VERSION OF THIS CHIPTUNE PACK!       "
