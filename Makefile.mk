@@ -141,7 +141,7 @@ clean:
 # Rule to LZ4 compress bin files.
 %.lz4 : %.bin
 	$(MKDIR_P) "./build"
-	$(LZ4) -f $< $@
+	$(LZ4) --best -f $< $@
 
 # Rule to copy MOD files.
 %.bin : %.mod

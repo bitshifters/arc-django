@@ -79,6 +79,10 @@ main:
 	mov r1, #8
 	swi OS_WriteN
 
+	; Seed RND.
+	swi OS_ReadMonotonicTime
+	str r0, rnd_seed
+
 	; EARLY INIT / LOAD STUFF HERE!
 	; Setting sample quality to maximum makes the tunes sound much worse!
 	; QTM default is 32us, but 48us sounds correct. I presume this is

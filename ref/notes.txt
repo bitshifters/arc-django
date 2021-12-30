@@ -74,7 +74,7 @@ Now have the correct assets:
 - Implement scroller speed change & pause. - DONE
 - Add original scroller text. - DONE
 - Add sinewave note sprites. - DONE
-- Add sprite masking and randomise next note.
+- Add sprite masking and randomise next note. - DONE
 - Better vubars?
 - Check vertical alignment of all elements. - DONE
 - Implement autoplay & toggle.
@@ -86,6 +86,7 @@ Now have the correct assets:
 - Add Bitshifters intro logo?
 - Extend scrolltext to include Bitshifters credits & greets.
 - Remove dead code and tidy up code into separate files.
+- Remove stack from exe?
 - Compress the overall exe as much as possible.
 - Make !folder icon.
 - Add readme to the build.
