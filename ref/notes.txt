@@ -88,7 +88,7 @@ Now have the correct assets:
 - Remove dead code and tidy up code into separate files.
 - Remove stack from exe?
 - Compress the overall exe as much as possible.
-- Make !folder icon.
+- Make !folder icon. - DONE
 - Add readme to the build.
 - Nice fade on escape / exit?
 - Test all on real hardware!

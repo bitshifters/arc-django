@@ -17,7 +17,8 @@ endif
 
 PNG2ARC=./bin/png2arc.py
 PNG2ARC_FONT=./bin/png2arc_font.py
-PNG2ARC_DEPS:=./bin/png2arc.py ./bin/arc.py ./bin/png2arc_font.py
+PNG2ARC_SPRITE=./bin/png2arc_sprite.py
+PNG2ARC_DEPS:=./bin/png2arc.py ./bin/arc.py ./bin/png2arc_font.py ./bin/png2arc_sprite.py
 FOLDER=!Django01
 HOSTFS=..\..\Arculator_V2.0_Windows/hostfs
 # TODO: Need a copy command that copes with forward slash directory separator.
@@ -37,6 +38,7 @@ folder: code music
 	$(MKDIR_P) $(FOLDER)
 	$(COPY) .\folder\*.* "$(FOLDER)\*.*"
 	$(COPY) .\build\arc-django.bin "$(FOLDER)\!RunImage,ff8"
+	$(COPY) .\build\icon.bin "$(FOLDER)\!Sprites,ff9"
 
 .PHONY:code
 code: assets music
@@ -46,7 +48,7 @@ code: assets music
 .PHONY:assets
 assets: ./build/logo.lz4 ./build/logo.bin.pal ./build/scroller_font.bin \
 	./build/note1.bin ./build/note2.bin ./build/note3.bin ./build/note4.bin \
-	./build/note5.bin
+	./build/note5.bin ./build/icon.bin
 
 .PHONY:music
 music: ./build/music_01.bin ./build/music_02.bin ./build/music_03.bin \
@@ -65,6 +67,7 @@ clean:
 ##########################################################################
 ##########################################################################
 
+# TODO: Figure out how to not need to make the build dir for every target.
 ./build/logo.lz4: ./build/logo.bin
 ./build/logo.bin: ./data/gfx/chipoDjango3.png $(PNG2ARC_DEPS)
 	$(MKDIR_P) "./build"
@@ -93,6 +96,10 @@ clean:
 ./build/note5.bin: ./data/gfx/note5.png $(PNG2ARC_DEPS)
 	$(MKDIR_P) "./build"
 	$(PYTHON2) $(PNG2ARC_FONT) -o $@ --glyph-dim 16 16 --max-glyphs 1 --use-palette ./build/logo.bin.pal --closest-match $< 9
+
+./build/icon.bin: ./data/gfx/icon.png $(PNG2ARC_DEPS)
+	$(MKDIR_P) "./build"
+	$(PYTHON2) $(PNG2ARC_SPRITE) --name !django01 -o $@ $< 9
 
 ##########################################################################
 ##########################################################################
