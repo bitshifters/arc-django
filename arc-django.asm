@@ -29,6 +29,7 @@
 .equ Horizontal_Divider_3, 233
 
 .equ Mouse_Sensitivity, 10
+.equ Glitch_Time, 12
 
 .include "lib/swis.h.asm"
 
@@ -133,9 +134,9 @@ main:
 	bl palette_set_block
 
 	bl get_screen_addr
-	adrl r0, logo_lz4
-	ldr r1, screen_addr
-	bl unlz4
+	ldr r12, screen_addr
+	adrl r9, logo_data
+	bl plot_logo
 
 	; Draw menu to screen.
 	bl plot_dividers
@@ -183,6 +184,20 @@ main_loop:
 
 	; do VU bars.
 	bl update_vu_bars
+
+	; do glitch.
+	ldr r0, glitch_timer
+	cmp r0, #0
+	beq .8
+
+	subs r0, r0, #1
+	str r0, glitch_timer
+
+	ldr r12, screen_addr
+	adrl r9, logo_data
+	bleq plot_logo
+	blne plot_logo_glitched
+	.8:
 
 	.if _DEBUG_RASTERS
 	adr r0, vdu_set_border_green
@@ -339,6 +354,9 @@ selection_number:
 	.long 0
 
 selection_colour:
+	.long 0
+
+glitch_timer:
 	.long 0
 
 error_noscreenmem:
@@ -614,6 +632,9 @@ play_song:
 
 	; Play music!
 	swi QTM_Start
+
+	mov r0, #Glitch_Time
+	str r0, glitch_timer
 	mov pc, lr
 
 plot_menu:
@@ -778,6 +799,7 @@ screen_addr:
 .include "src/scroller.asm"
 .include "src/small-font-plot.asm"
 .include "src/sprites.asm"
+.include "src/logo-plot.asm"
 .include "lib/mode9-palette.asm"
 .include "lib/mode9-screen.asm"
 .include "lib/lz4-decode.asm"
@@ -902,8 +924,8 @@ logo_pal_block:
 .incbin "build/logo.bin.pal"
 
 .align 4
-logo_lz4:
-.incbin "build/logo.lz4"
+logo_data:
+.incbin "build/logo.bin"
 
 .align 4
 music_table:

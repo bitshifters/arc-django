@@ -147,7 +147,7 @@ scroller_scroll_row:
 	.endif
 	ldr pc, [sp], #4
 
-.macro scroller_shift_by_pixels
+.macro scroller_shift_left_by_pixels
 	; shift word right 4 bits to clear left most pixel
 	mov r0, r0, lsr r12
 	; mask in right most pixel from next word
@@ -175,24 +175,24 @@ scroller_scroll_line:
     rsb r14, r12, #32       ; reverse pixel shift (lsl #32-4*n)
 
 	ldmia r9, {r0-r8}		; read 9 words = 36 bytes = 72 pixels
-    scroller_shift_by_pixels
+    scroller_shift_left_by_pixels
 	stmia r9!, {r0-r7}		; write 8 words = 32 bytes = 64 pixels
 
 	ldmia r9, {r0-r8}		; read 9 words = 36 bytes = 72 pixels
-    scroller_shift_by_pixels
+    scroller_shift_left_by_pixels
 	stmia r9!, {r0-r7}		; write 8 words = 32 bytes = 64 pixels
 
 	ldmia r9, {r0-r8}		; read 9 words = 36 bytes = 72 pixels
-    scroller_shift_by_pixels
+    scroller_shift_left_by_pixels
 	stmia r9!, {r0-r7}		; write 8 words = 32 bytes = 64 pixels
 
 	ldmia r9, {r0-r8}		; read 9 words = 36 bytes = 72 pixels
-    scroller_shift_by_pixels
+    scroller_shift_left_by_pixels
 	stmia r9!, {r0-r7}		; write 8 words = 32 bytes = 64 pixels
 
 	ldmia r9, {r0-r7}		; read 8 words = 32 bytes = 64 pixels
     mov r8, r10
-    scroller_shift_by_pixels
+    scroller_shift_left_by_pixels
 	stmia r9!, {r0-r7}		; write 8 words = 32 bytes = 64 pixels
 
 	mov r10, r10, lsr r12	; rotate new data word

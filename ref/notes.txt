@@ -80,7 +80,7 @@ Now have the correct assets:
 - Implement autoplay & toggle.
 - Fix mouse control to be absolute.
 - Add background colours & fades.
-- Logo glitch on 'load'.
+- Logo glitch on 'load'. - DONE
 - Menu colour highlight polish.
 - Intro Rabenauge logo.
 - Add Bitshifters intro logo?
