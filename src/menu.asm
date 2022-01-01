@@ -30,7 +30,7 @@ update_menu:
 	str lr, [sp, #-4]!
 
 	; check up
-	mov r1, #IKey_ArrowUp
+	mov r1, #RMKey_ArrowUp
 	bl check_key_debounced
 	bne .2
 
@@ -43,7 +43,7 @@ update_menu:
 	
 .2:
 	; check down
-	mov r1, #IKey_ArrowDown
+	mov r1, #RMKey_ArrowDown
 	bl check_key_debounced
 	bne .3
 
@@ -56,7 +56,7 @@ update_menu:
 
 .3:
 	; check return
-	mov r1, #IKey_Return
+	mov r1, #RMKey_Return
 	bl check_key_debounced
 	beq .4
 
@@ -72,6 +72,7 @@ update_menu:
 
 .5:
 	; Check mouse.
+.if 0
 	swi OS_Mouse
 	ldr r0, prev_mouse_y
 	str r1, prev_mouse_y
@@ -102,6 +103,7 @@ update_menu:
 
 .7:
 	str r0, mouse_delta_y
+.endif
 
 	; Update selected item.
     ldr r0, vsync_count
@@ -128,9 +130,30 @@ update_menu:
 	ldr pc, [sp], #4
 
 keyboard_scan_debounced:
-	mov r0, #OSByte_KeyboardScan
-	mov r1, #1
-	swi OS_Byte
+    swi RasterMan_ScanKeyboard
+;	mov r0, #OSByte_KeyboardScan
+;	mov r1, #1
+;	swi OS_Byte
+
+    mov r1, #0xff
+    cmp r0, #0 
+    beq .1
+
+    and r2, r0, #0xf000
+    cmp r2, #0xc000
+    bne .1
+
+    and r2, r0, #0x00f0
+    cmp r2, #0x00c0
+    bne .1
+
+    ; 0xcLcH
+    and r2, r0, #0x0f00
+    mov r1, r2, lsr #8
+    and r2, r0, #0x000f
+    orr r1, r1, r2, lsl #4 
+
+.1:
 	; R1 contains key or 0xff if no key.
 	mov r2, r1	; key pressed
 	ldr r0, held_key
@@ -142,7 +165,7 @@ keyboard_scan_debounced:
 
 ; R1=IKey no. EOR 0xff
 check_key_debounced:
-	eor r1, r1, #0xff
+;	eor r1, r1, #0xff
 	ldr r0, current_key
 	cmp r0, r1
 	mov pc, lr

@@ -2,7 +2,7 @@
 ; arc-django - An Archimedes port of Chipo Django musicdisk by Rabenauge
 ; ============================================================================
 
-.equ _DEBUG, 0
+.equ _DEBUG, 1
 .equ _FIX_FRAME_RATE, 0					; useful for !DDT breakpoints
 .equ _DEBUG_RASTERS, (_DEBUG && 0)
 
@@ -85,6 +85,46 @@ main:
 	str r0, rnd_seed
 
 	; EARLY INIT / LOAD STUFF HERE!
+
+	; RasterMan Init.
+	; Init tables.
+	adr r5, rasterman_tables
+	ldmia r5, {r0-r3}
+	add r0, r0, r5			; vidc table 1
+	add r1, r1, r5			; vidc table 2
+	add r2, r2, r5			; vidc table 3
+	add r3, r3, r5			; memc table
+	stmfd sp!, {r0-r3}
+
+	mov r4, #0
+	mov r6, #0x40000000		; set border colour black.
+	mov r7, r6
+	mov r8, r6
+	mov r9, r6
+	mov r5, #256
+.2:
+	stmia r0!, {r6-r9}		; 4x VIDC commands per line.
+	stmia r1!, {r6-r9}		; 4x VIDC commands per line.
+	stmia r2!, {r6-r9}		; 4x VIDC commands per line.
+	stmia r2!, {r6-r9}		; 4x VIDC commands per line.
+	str r4, [r3], #4
+	str r4, [r3], #4
+	subs r5, r5, #1
+
+	bic r9, r9, #0xff
+	orr r9, r9, r5
+
+	bne .2
+	ldmfd sp!, {r0-r3}
+	swi RasterMan_SetTables
+
+	; QTM Init.
+	; Required to make QTM play nicely with RasterMan.
+	mov r0, #4
+	mov r1, #-1
+	mov r2, #-1
+	swi QTM_SoundControl
+
 	; Setting sample quality to maximum makes the tunes sound much worse!
 	; QTM default is 32us, but 48us sounds correct. I presume this is
 	; because chiptune samples are so small they cannot be interpolated
@@ -115,7 +155,8 @@ main:
 	; Start with bank 1.
 	mov r1, #1
 	str r1, scr_bank
-	
+
+.if 0	
 	; Claim the Error vector.
 	MOV r0, #ErrorV
 	ADR r1, error_handler
@@ -127,6 +168,7 @@ main:
 	adr r1, event_handler
 	mov r2, #0
 	swi OS_AddToVector
+.endif
 
 	; LATE INITALISATION HERE!
 
@@ -149,25 +191,33 @@ main:
 	bl play_song
 
 	; Enable Vsync event
-	mov r0, #OSByte_EventEnable
-	mov r1, #Event_VSync
-	SWI OS_Byte
+;	mov r0, #OSByte_EventEnable
+;	mov r1, #Event_VSync
+;	SWI OS_Byte
+
+	swi RasterMan_Install
 
 main_loop:
 
+
 	; Block if we've not even had a vsync since last time - we're >50Hz!
-	ldr r1, last_vsync
-.1:
+;	ldr r1, last_vsync
+;.1:
+;	ldr r2, vsync_count
+;	cmp r1, r2
+;	beq .1
+;	.if _FIX_FRAME_RATE
+;	mov r0, #1
+;	.else
+;	sub r0, r2, r1
+;	.endif
+;	str r2, last_vsync
+;	str r0, vsync_delta
+
+	swi RasterMan_Wait
 	ldr r2, vsync_count
-	cmp r1, r2
-	beq .1
-	.if _FIX_FRAME_RATE
-	mov r0, #1
-	.else
-	sub r0, r2, r1
-	.endif
-	str r2, last_vsync
-	str r0, vsync_delta
+	add r2, r2, #1
+	str r2, vsync_count
 
 	; R0 = vsync delta since last frame.
 
@@ -177,9 +227,9 @@ main_loop:
 	.endif
 
 	; DO STUFF HERE!
-	bl get_next_screen_for_writing
-	ldr r8, screen_addr
-	bl show_screen_at_vsync
+;	bl get_next_screen_for_writing
+;	ldr r8, screen_addr
+;	bl show_screen_at_vsync
 
 	; scroll the bottom.
 	bl scroller_update
@@ -216,8 +266,13 @@ main_loop:
 	bl keyboard_scan_debounced
 
 	; exit if Escape is pressed
-	mov r1, #IKey_Escape
-	bl check_key
+;	mov r1, #IKey_Escape
+;	bl check_key
+;	beq exit
+
+	swi RasterMan_ScanKeyboard
+	mov r1, #0xc0c0
+	cmp r0, r1
 	beq exit
 
 	; do menu.
@@ -227,6 +282,9 @@ main_loop:
 
 ; R1=IKey no.
 check_key:
+	movs r1, #0xff
+	mov pc, lr
+
 	mov r0, #OSByte_ReadKey
 	mov r2, #0xff
 	swi OS_Byte
@@ -325,15 +383,19 @@ get_screen_addr:
 screen_addr_input:
 	.long VD_ScreenStart, -1
 
-exit:	
-	; wait for vsync (any pending buffers)
-	mov r0, #19
-	swi OS_Byte
+exit:
+	swi RasterMan_Wait
 
 	; disable music
 	mov r0, #0
 	swi QTM_Stop
 
+	swi RasterMan_Release
+
+	; wait for vsync (any pending buffers)
+	swi RasterMan_Wait
+
+.if 0
 	; disable vsync event
 	mov r0, #OSByte_EventDisable
 	mov r1, #Event_VSync
@@ -359,6 +421,7 @@ exit:
 	mov r0, #OSByte_WriteVDUBank
 	ldr r1, scr_bank
 	swi OS_Byte
+.endif
 
 	SWI OS_Exit
 
@@ -384,13 +447,16 @@ event_handler:
 	STR r0, buffer_pending
 	MOV r0, #OSByte_WriteDisplayBank
 
-	; some SVC stuff I don't understand :)
+	; Allow SWIs to be safely called from within interrupt handler.
+	; See Archimedes Operating System book pp.264
 	STMDB sp!, {r2-r12}
-	MOV r9, pc     ;Save old mode
-	ORR r8, r9, #3 ;SVC mode
-	TEQP r8, #0
-	MOV r0,r0
-	STR lr, [sp, #-4]!
+	MOV r9, pc     		; save the current PC & mode in R9.
+	ORR r8, r9, #3 		; use R9 to make R8 a supervisor version.
+	TEQP r8, #0			; use R8 to change mode.
+	MOV r0,r0			; no-op **REQUIRED**
+	STR lr, [sp, #-4]!	; stack the supervisor LR.
+	; Now safe to call SWIs.
+	
 	SWI XOS_Byte
 
 	; set full palette if there is a pending palette block
@@ -424,9 +490,12 @@ event_handler:
 	str r0, palette_pending
 .4:
 
-	LDR lr, [sp], #4
-	TEQP r9, #0    ;Restore old mode
-	MOV r0, r0
+	; Allow SWIs to be safely called from within interrupt handler.
+	; See Archimedes Operating System book pp.264
+	LDR lr, [sp], #4		; Get supervisor LR back.
+	TEQP r9, #0 			; Restore the original state.
+	MOV r0, r0				; No-op **REQUIRED**
+
 	LDMIA sp!, {r2-r12}
 	LDMIA sp!, {r0-r1, pc}
 
@@ -515,6 +584,9 @@ play_song:
 	mov r0, #0					; load from address
 	swi QTM_Load
 
+	; This seems to help minimise how much RasterMan timing slips after QTM_Start.
+	swi RasterMan_Wait
+
 	; Play music!
 	swi QTM_Start
 
@@ -560,20 +632,12 @@ vdu_set_border_black:
 .align 4
 .endif
 
-scroller_text_string:
-	.include "src/scrolltxt-final.asm"
-	.align 4
-scroller_text_string_end:
+rasterman_tables:
+	.long vidc_table_1 - rasterman_tables
+	.long vidc_table_2 - rasterman_tables
+	.long vidc_table_3 - rasterman_tables
+	.long memc_table - rasterman_tables
 
-.align 4
-logo_pal_block:
-.incbin "build/logo.bin.pal"
-
-.align 4
-logo_data:
-.incbin "build/logo.bin"
-
-.align 4
 music_table:
 	.long music_01_mod - music_table
 	.long music_02_mod - music_table
@@ -586,6 +650,19 @@ music_table:
 	.long music_09_mod - music_table
 	.long music_10_mod - music_table
 	.long music_11_mod - music_table
+
+.align 4
+logo_pal_block:
+.incbin "build/logo.bin.pal"
+
+.align 4
+logo_data:
+.incbin "build/logo.bin"
+
+scroller_text_string:
+	.include "src/scrolltxt-final.asm"
+	.align 4
+scroller_text_string_end:
 
 .align 4
 scroller_font_data:
@@ -646,3 +723,19 @@ music_11_mod:
 ; ============================================================================
 ; BSS Segment
 ; ============================================================================
+
+; TODO: Figure out how to actually specify BSS!!
+
+.align 4
+vidc_table_1:
+	.skip 256*16
+
+; TODO: Can we get rid of these?
+vidc_table_2:
+	.skip 256*16
+
+vidc_table_3:
+	.skip 256*32
+
+memc_table:
+	.skip 256*8

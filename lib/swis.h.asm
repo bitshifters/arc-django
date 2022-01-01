@@ -41,6 +41,10 @@
 .equ IKey_ArrowRight, 134
 .equ IKey_Return, 0xB6
 
+.equ RMKey_ArrowUp, 0x59
+.equ RMKey_ArrowDown, 0x63
+.equ RMKey_Return, 0x47
+
 .equ DynArea_Screen, 2
 
 .equ VD_ScreenStart, 148 
@@ -57,8 +61,22 @@
 .equ QTM_Start, 0x47E41
 .equ QTM_Stop, 0x47E42
 .equ QTM_Pause, 0x47E43
-.equ QTM_SetSampleSpeed, 0x47E49
-.equ QTM_Pos, 0x47E46
 .equ QTM_Clear, 0x47E44
-.equ QTM_ReadVULevels, 0x47E51
+.equ QTM_Pos, 0x47E46
+.equ QTM_SetSampleSpeed, 0x47E49
 .equ QTM_VUBarControl, 0x47E50
+.equ QTM_ReadVULevels, 0x47E51
+.equ QTM_SoundControl, 0x47E58
+
+.equ RasterMan_Install, 0x47e80
+.equ RasterMan_Release, 0x47e81
+.equ RasterMan_Wait, 0x47e82
+.equ RasterMan_SetTables, 0x47e83
+.equ RasterMan_Version, 0x47e84
+.equ RasterMan_ReadScanline, 0x47e85
+.equ RasterMan_SetVIDCRegister, 0x47e86
+.equ RasterMan_SetMEMCRegister, 0x47e87
+.equ RasterMan_QTMParamAddr, 0x47e88
+.equ RasterMan_ScanKeyboard, 0x47e89
+.equ RasterMan_ClearKeyBuffer, 0x47e8a
+.equ RasterMan_ReadScanAddr, 0x47e8b
