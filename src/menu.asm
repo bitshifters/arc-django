@@ -20,6 +20,9 @@ prev_mouse_y:
 mouse_delta_y:
 	.long 0
 
+selection_number:
+	.long 0
+
 selection_colour:
 	.long 0
 

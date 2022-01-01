@@ -1,6 +1,6 @@
 ; Logo plotting.
 
-.equ Logo_Height, 100
+.equ Logo_Height, 98
 
 ; R9=logo_addr, R12=screen_addr
 ; Assume plotting at top of the screen.

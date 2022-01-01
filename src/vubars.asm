@@ -39,18 +39,11 @@ update_vu_bars:
 
 	ldr pc, [sp], #4
 
-; TODO: Feels like duped code here.
 plot_dividers:
 	str lr, [sp, #-4]!
 
-	mov r1, #-1
-	mov r2, r1
-	mov r3, r1
-	mov r4, r1
-	mov r5, r1
-	mov r6, r1
-	mov r7, r1
-	mov r8, r1
+	mov r1, #-1 ; white!
+    bl copy_1_to_8
 
 	ldr r12, screen_addr
 
@@ -58,6 +51,19 @@ plot_dividers:
 	add r9, r12, r0, lsl #7	; y*128
 	add r9, r9, r0, lsl #5	; +y*32 = y*160
 	bl plot_horizontal_line
+
+    ldr r1, small_font_bg_word
+    bl copy_1_to_8
+
+    add r9, r9, #Screen_Stride
+    mov r10, #Horizontal_Divider_2 - Horizontal_Divider_1 - 3
+    .1:
+    bl plot_horizontal_line
+    subs r10, r10, #1
+    bne .1
+
+    mov r1, #-1
+    bl copy_1_to_8
 
 	mov r0, #Horizontal_Divider_2
 	add r9, r12, r0, lsl #7	; y*128
@@ -88,19 +94,22 @@ plot_vu_bar:
 	orr r1, r1, r1, lsl #8	; duplicate byte.
 	orr r1, r1, r1, lsl #16	; duplicate word.
 
-	mov r2, r1
-	mov r3, r1
-	mov r4, r1
-	mov r5, r1
-	mov r6, r1
-	mov r7, r1
-	mov r8, r1
+    bl copy_1_to_8
 
 	.rept VU_Bars_Height
 	bl plot_horizontal_line
 	.endr
 
 	mov r1, #0
+	bl copy_1_to_8
+
+	.rept VU_Bars_Gap-VU_Bars_Height
+	bl plot_horizontal_line
+	.endr
+
+	ldr pc, [sp], #4
+
+copy_1_to_8:
 	mov r2, r1
 	mov r3, r1
 	mov r4, r1
@@ -108,12 +117,7 @@ plot_vu_bar:
 	mov r6, r1
 	mov r7, r1
 	mov r8, r1
-	
-	.rept VU_Bars_Gap-VU_Bars_Height
-	bl plot_horizontal_line
-	.endr
-
-	ldr pc, [sp], #4
+    mov pc, lr
 
 ; R9 = ptr to start of line.
 ; Assume R1-R8 contain screen data.

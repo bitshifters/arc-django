@@ -2,7 +2,7 @@
 ; arc-django - An Archimedes port of Chipo Django musicdisk by Rabenauge
 ; ============================================================================
 
-.equ _DEBUG, 1
+.equ _DEBUG, 0
 .equ _FIX_FRAME_RATE, 0					; useful for !DDT breakpoints
 .equ _DEBUG_RASTERS, (_DEBUG && 0)
 
@@ -77,7 +77,7 @@ main:
 
 	; Disable cursor
 	adr r0, vdu_disable_cursor
-	mov r1, #8
+	mov r1, #10
 	swi OS_WriteN
 
 	; Seed RND.
@@ -236,9 +236,6 @@ check_key:
 
 song_number:
 	.long -1
-
-selection_number:
-	.long 0
 
 glitch_timer:
 	.long 0

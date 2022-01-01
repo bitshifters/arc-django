@@ -37,7 +37,10 @@ small_font_ripple_flag:
     .long 0
 
 small_font_colour:
-    .long 0xffffffff        ; default colour 15.
+    .long 15
+
+small_font_bg_word:
+    .long 0x66666666
 
 ; R10=colour no.
 small_font_get_colour_data:
@@ -110,6 +113,9 @@ small_font_plot_glyph:
     ; Ripple hack.
     ldr r12, small_font_ripple_flag
 
+    ; Bg colour.
+    ldr r4, small_font_bg_word
+
     ; Assumes SmallFont_Height == 5
     ; TODO: Assert this?
     adr r9, small_font_data
@@ -143,30 +149,30 @@ small_font_plot_glyph:
     orrne r3, r3, #0x0000000f
 
     ; TODO: Handle background that isn't black.
+    bic r5, r4, r3                  ; clear glyph bits from bg word.
     and r3, r3, r10                 ; mask in colour / data.
+    orr r3, r3, r5
     str r3, [r8], #Screen_Stride    ; next line.
 
-    ; Ripple hack.
-    cmp r12, #0
-    beq .2
+        ; Ripple hack.
+        cmp r12, #0
+        beq .2
+        and r10, r10, #0x0f
+        add r10, r10, #1
+        and r10, r10, #0x0f
+        bl small_font_get_colour_data
+        .2:
 
-    and r10, r10, #0x0f
-    add r10, r10, #1
-    and r10, r10, #0x0f
-    bl small_font_get_colour_data
-
-    .2:
     subs r7, r7, #1
     bne .1
 
-    ; Ripple hack.
-    cmp r12, #0
-    beq .3
+        ; Ripple hack.
+        cmp r12, #0
+        beq .3
+        ldr r10, small_font_colour
+        bl small_font_get_colour_data
+        .3:
 
-    ldr r10, small_font_colour
-    bl small_font_get_colour_data
-
-    .3:
     add r11, r11, #4
 	ldr pc, [sp], #4			; rts
 

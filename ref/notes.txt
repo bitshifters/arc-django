@@ -79,13 +79,13 @@ Now have the correct assets:
 - Check vertical alignment of all elements. - DONE
 - Implement autoplay & toggle.
 - Fix mouse control to be absolute.
-- Add background colours & fades.
+- Add background colours & fades. - STARTED
 - Logo glitch on 'load'. - DONE
-- Menu colour highlight polish.
+- Menu colour highlight polish. - DONE?
 - Intro Rabenauge logo.
 - Add Bitshifters intro logo?
 - Extend scrolltext to include Bitshifters credits & greets.
-- Remove dead code and tidy up code into separate files.
+- Remove dead code and tidy up code into separate files. - STARTED
 - Remove stack from exe?
 - Compress the overall exe as much as possible.
 - Make !folder icon. - DONE
