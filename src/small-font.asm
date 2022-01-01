@@ -33,21 +33,30 @@
 small_font_bold_flag:
     .long 0
 
+small_font_ripple_flag:
+    .long 0
+
+small_font_colour:
+    .long 0xffffffff        ; default colour 15.
+
+; R10=colour no.
+small_font_get_colour_data:
+    ; Convert colour # to word.
+    orr r10, r10, r10, lsl #4
+    orr r10, r10, r10, lsl #8
+    orr r10, r10, r10, lsl #16
+    mov pc, lr    
+
 ; R0=ptr to string.
-; R12=screen_addr.
 small_font_plot_string:
     stmfd sp!, {r3, lr}
 
     ; Set text cursor to home.
     ; TODO: Could remember cursor position.
-    ldr r12, screen_addr
-    mov r11, r12
+    ldr r11, screen_addr
 
-    ; Set default colour to white.
-    ; TODO: Could remember colour. Just set directly from code.
-    mov r10, #0xff
-    orr r10, r10, r10, lsl #8
-    orr r10, r10, r10, lsl #16
+    ldr r10, small_font_colour
+    bl small_font_get_colour_data
 
     mov r6, r0
 .1:
@@ -62,7 +71,8 @@ small_font_plot_string:
     ldrb r1, [r6], #1
     ldrb r2, [r6], #1
 
-    add r11, r12, r2, lsl #7    ; line * 128
+    ldr r11, screen_addr
+    add r11, r11, r2, lsl #7    ; line * 128
     add r11, r11, r2, lsl #5    ; + line * 32 = line * 160
     add r11, r11, r1, lsl #2    ; column.
     b .1
@@ -73,11 +83,10 @@ small_font_plot_string:
 
     ; Set Text Colour - next byte is colour #.
     ldrb r10, [r6], #1
+    str r10, small_font_colour
 
     ; Convert colour # to word.
-    orr r10, r10, r10, lsl #4
-    orr r10, r10, r10, lsl #8
-    orr r10, r10, r10, lsl #16
+    bl small_font_get_colour_data
     b .1
 
     .3:
@@ -97,6 +106,9 @@ small_font_plot_glyph:
     ; Bold option.
     ldr r4, small_font_bold_flag
     add r1, r1, r4
+
+    ; Ripple hack.
+    ldr r12, small_font_ripple_flag
 
     ; Assumes SmallFont_Height == 5
     ; TODO: Assert this?
@@ -130,12 +142,31 @@ small_font_plot_glyph:
     tst r2, #0b10000000
     orrne r3, r3, #0x0000000f
 
+    ; TODO: Handle background that isn't black.
     and r3, r3, r10                 ; mask in colour / data.
     str r3, [r8], #Screen_Stride    ; next line.
 
+    ; Ripple hack.
+    cmp r12, #0
+    beq .2
+
+    and r10, r10, #0x0f
+    add r10, r10, #1
+    and r10, r10, #0x0f
+    bl small_font_get_colour_data
+
+    .2:
     subs r7, r7, #1
     bne .1
 
+    ; Ripple hack.
+    cmp r12, #0
+    beq .3
+
+    ldr r10, small_font_colour
+    bl small_font_get_colour_data
+
+    .3:
     add r11, r11, #4
 	ldr pc, [sp], #4			; rts
 

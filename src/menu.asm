@@ -6,6 +6,7 @@
 .equ MENU_ARTIST_XPOS, 23
 .equ MENU_TOP_YPOS, 114
 .equ MENU_ROW_HEIGHT, 7
+.equ MENU_COLOUR, 15
 
 current_key:
 	.long 0
@@ -100,17 +101,27 @@ update_menu:
 	str r0, mouse_delta_y
 
 	; Update selected item.
-	mov r0, #17	; set text colour
-	swi OS_WriteC
+    ldr r0, vsync_count
+    ands r0, r0, #1
+    bne .8
+
 	ldr r0, selection_colour
 	add r0, r0, #1
 	cmp r0, #15
 	movgt r0, #0
 	str r0, selection_colour
-	swi OS_WriteC
+    str r0, small_font_colour
+	mov r0, #SmallFont_BoldBase
+	str r0, small_font_bold_flag
+    str r0, small_font_ripple_flag
 	ldr r3, selection_number
 	bl plot_menu_item_ex
+    mov r10, #MENU_COLOUR
+    str r10, small_font_colour
+    mov r10, #0
+    str r10, small_font_ripple_flag
 
+    .8:
 	ldr pc, [sp], #4
 
 keyboard_scan_debounced:
@@ -135,6 +146,8 @@ check_key_debounced:
 
 plot_menu:
 	str lr, [sp, #-4]!
+    mov r10, #MENU_COLOUR
+    bl small_font_colour
 	mov r3, #MAX_SONGS
 	.1:
 	bl plot_menu_item
@@ -156,6 +169,8 @@ plot_menu_item_ex:
 	ldr r1, [r2, r3, lsl #2]	; r0 * 4
 	add r0, r1, r2				; string address
 	bl small_font_plot_string
+    mov r0, #0
+    str r0, small_font_bold_flag
 	ldr pc, [sp], #4
 
 .align 4
@@ -219,7 +234,6 @@ menu_11_string:
 
 .align 4
 menu_12_string:
-	.byte 17, 8		; define text colour 8
 	.byte 31, 32, MENU_TOP_YPOS+11*MENU_ROW_HEIGHT, "AUTOPLAY", 0
 
 .align 4
