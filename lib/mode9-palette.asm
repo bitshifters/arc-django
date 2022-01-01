@@ -32,6 +32,7 @@ palette_set_block:
     blt .1
 	ldr pc, [sp], #4			; rts
 
+.if 0
 ; R2 = palette block ptr
 palette_make_greyscale:
 	str lr, [sp, #-4]!			; push lr on stack
@@ -107,3 +108,14 @@ solid_white:
 
 palette_interp_block:
     .skip 64
+.endif
+
+.align 4
+palette_osword_block:
+    .skip 8
+    ; logical colour
+    ; physical colour (16)
+    ; red
+    ; green
+    ; blue
+    ; (pad)
