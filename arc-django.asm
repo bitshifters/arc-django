@@ -115,6 +115,9 @@ main:
 	mov r1, #VU_Bars_Gravity
 	swi QTM_VUBarControl
 
+	; QTM callback.
+	bl claim_music_interrupt
+
 	; Clear all screen buffers
 	mov r1, #1
 .1:
@@ -178,26 +181,13 @@ main:
 
 main_loop:
 
-
 	; Block if we've not even had a vsync since last time - we're >50Hz!
-;	ldr r1, last_vsync
-;.1:
-;	ldr r2, vsync_count
-;	cmp r1, r2
-;	beq .1
-;	.if _FIX_FRAME_RATE
-;	mov r0, #1
-;	.else
-;	sub r0, r2, r1
-;	.endif
-;	str r2, last_vsync
-;	str r0, vsync_delta
-
 	swi RasterMan_Wait
-	ldr r2, vsync_count
-	add r2, r2, #1
-	str r2, vsync_count
 
+	mov r0, #1
+	ldr r2, vsync_count
+	add r2, r2, r0
+	str r2, vsync_count
 	; R0 = vsync delta since last frame.
 
 	; show debug
@@ -206,9 +196,6 @@ main_loop:
 	.endif
 
 	; DO STUFF HERE!
-;	bl get_next_screen_for_writing
-;	ldr r8, screen_addr
-;	bl show_screen_at_vsync
 
 	; scroll the bottom.
 	bl scroller_update
@@ -242,40 +229,21 @@ main_loop:
 	swi OS_WriteN
 	.endif
 
-	bl keyboard_scan_debounced
-
 	; exit if Escape is pressed
-;	mov r1, #IKey_Escape
-;	bl check_key
-;	beq exit
-
 	swi RasterMan_ScanKeyboard
 	mov r1, #0xc0c0
 	cmp r0, r1
 	beq exit
 
 	; do menu.
+	bl keyboard_scan_debounced
 	bl update_menu
 
+	; autoplay!
+	bl check_autoplay
+
+	; repeat!
 	b main_loop
-
-; R1=IKey no.
-check_key:
-	movs r1, #0xff
-	mov pc, lr
-
-	mov r0, #OSByte_ReadKey
-	mov r2, #0xff
-	swi OS_Byte
-	cmp r1, #0xff
-	cmpeq r2, #0xff
-	mov pc, lr
-
-song_number:
-	.long -1
-
-glitch_timer:
-	.long 0
 
 error_noscreenmem:
 	.long 0
@@ -331,6 +299,11 @@ debug_write_vsync_count:
 	ldr r0, selection_number
 	bl debug_print_r0
 
+	mov r0, #32
+	swi OS_WriteC
+	ldr r0, song_ended
+	bl debug_print_r0
+
 .if Mouse_Enable
 	mov r0, #32
 	swi OS_WriteC
@@ -366,6 +339,8 @@ screen_addr_input:
 
 exit:
 	swi RasterMan_Wait
+
+	bl release_music_interrupt
 
 	; disable music
 	mov r0, #0
@@ -521,33 +496,27 @@ error_handler:
 	LDMIA sp!, {r0-r2, lr}
 	MOVS pc, lr
 
-show_screen_at_vsync:
-	; Show current bank at next vsync
-	ldr r1, scr_bank
-	str r1, buffer_pending
-	; Including its associated palette
-	ldr r1, palette_block_addr
-	str r1, palette_pending
-	mov pc, lr
-
-get_next_screen_for_writing:
-	; Increment to next bank for writing
-	ldr r1, scr_bank
-	add r1, r1, #1
-	cmp r1, #Screen_Banks
-	movgt r1, #1
-	str r1, scr_bank
-
-	; Now set the screen bank to write to
-	mov r0, #OSByte_WriteVDUBank
-	swi OS_Byte
-
-	; Back buffer address for writing bank stored at screen_addr
-	b get_screen_addr
-
 ; ============================================================================
 ; Play the music!
 ; ============================================================================
+
+glitch_timer:
+	.long 0
+
+song_number:
+	.long -1
+
+autoplay_flag:
+	.long 1
+
+song_ended:
+	.long 0
+
+prev_music_interrupt:
+	.long 0
+
+prev_interrupt_sp:
+	.long 0
 
 play_song:
 	swi QTM_Stop
@@ -574,6 +543,60 @@ play_song:
 	mov r0, #Glitch_Time
 	str r0, glitch_timer
 	mov pc, lr
+
+check_autoplay:
+	ldr r1, song_ended
+	cmp r1, #0
+	moveq pc, lr
+
+	ldr r0, autoplay_flag
+	cmp r0, #0
+	moveq pc, lr
+
+	str lr, [sp, #-4]!
+	ldr r0, song_number
+	mov r3, r0
+	add r0, r0, #1
+	cmp r0, #MAX_SONGS
+	movge, r0, #0
+	bl play_song
+
+	; R3=old item,
+	bl plot_menu_item
+	ldr r3, song_number
+	bl plot_menu_item
+
+	mov r0, #0
+	str r0, song_ended
+	ldr pc, [sp], #4
+
+claim_music_interrupt:
+	mov r0, #2
+	mov r1, #2
+	swi QTM_MusicOptions
+
+	mov r0, #0
+	adr r1, music_interrupt
+	mov r2, #0
+	swi QTM_MusicInterrupt
+	str r1, prev_music_interrupt
+	str r2, prev_interrupt_sp
+	mov pc, lr
+
+release_music_interrupt:
+	mov r0, #0
+	ldr r1, prev_music_interrupt
+	ldr r2, prev_interrupt_sp
+	swi QTM_MusicInterrupt
+	mov pc, lr
+
+music_interrupt:
+	cmp r0, #0
+	bne .1
+
+	str r1, song_ended
+	.1:
+	movs pc, lr
 
 ; ============================================================================
 ; Additional code modules

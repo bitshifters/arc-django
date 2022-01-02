@@ -91,6 +91,7 @@ Now have the correct assets:
 - Compress the overall exe as much as possible.
 - Make !folder icon. - DONE
 - Add readme to the build.
+- Sort CR/LF in !Run.
 - Nice fade on escape / exit?
 - Test all on real hardware!
 

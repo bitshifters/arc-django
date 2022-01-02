@@ -47,6 +47,7 @@
 .equ RMKey_Space, 0x5f
 .equ RMKey_LeftClick, 0x70
 .equ RMKey_RightClick, 0x72
+.equ RMKey_A, 0x3c
 
 .equ DynArea_Screen, 2
 
@@ -70,6 +71,8 @@
 .equ QTM_VUBarControl, 0x47E50
 .equ QTM_ReadVULevels, 0x47E51
 .equ QTM_SoundControl, 0x47E58
+.equ QTM_MusicOptions, 0x47E5E
+.equ QTM_MusicInterrupt, 0x47E5F
 
 .equ RasterMan_Install, 0x47e80
 .equ RasterMan_Release, 0x47e81
