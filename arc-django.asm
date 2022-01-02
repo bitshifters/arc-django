@@ -2,7 +2,7 @@
 ; arc-django - An Archimedes port of Chipo Django musicdisk by Rabenauge
 ; ============================================================================
 
-.equ _DEBUG, 0
+.equ _DEBUG, 1
 .equ _FIX_FRAME_RATE, 0					; useful for !DDT breakpoints
 .equ _DEBUG_RASTERS, (_DEBUG && 0)
 
@@ -95,6 +95,8 @@ main:
 	mov r0, #VU_Bars_Effect
 	mov r1, #VU_Bars_Gravity
 	swi QTM_VUBarControl
+
+	bl claim_music_interrupt
 
 	; Clear all screen buffers
 	mov r1, #1
@@ -223,6 +225,8 @@ main_loop:
 	; do menu.
 	bl update_menu
 
+	bl check_autoplay
+
 	b main_loop
 
 ; R1=IKey no.
@@ -329,6 +333,8 @@ exit:
 	; wait for vsync (any pending buffers)
 	mov r0, #19
 	swi OS_Byte
+
+	bl release_music_interrupt
 
 	; disable music
 	mov r0, #0
@@ -522,12 +528,82 @@ play_song:
 	str r0, glitch_timer
 	mov pc, lr
 
+song_ended:
+	.long 0
+
+autoplay_flag:
+	.long 1
+
+prev_music_interrupt:
+	.long 0
+
+prev_interrupt_sp:
+	.long 0	
+
+check_autoplay:
+	ldr r1, song_ended
+	cmp r1, #0
+	moveq pc, lr
+
+	ldr r0, autoplay_flag
+	cmp r0, #0
+	moveq pc, lr
+
+	str lr, [sp, #-4]!
+	ldr r0, song_number
+	mov r3, r0
+	add r0, r0, #1
+	cmp r0, #MAX_SONGS
+	movge, r0, #0
+	bl play_song
+
+	; R3=old item,
+	bl plot_menu_item
+	ldr r3, song_number
+	bl plot_menu_item
+
+	mov r0, #0
+	str r0, song_ended
+	ldr pc, [sp], #4
+
+claim_music_interrupt:
+	mov r0, #2
+	mov r1, #2
+	swi QTM_MusicOptions
+
+	mov r0, #0
+	adr r1, music_interrupt
+	mov r2, #0
+	swi QTM_MusicInterrupt
+	str r1, prev_music_interrupt
+	str r2, prev_interrupt_sp
+	mov pc, lr
+
+release_music_interrupt:
+	mov r0, #0
+	ldr r1, prev_music_interrupt
+	ldr r2, prev_interrupt_sp
+	swi QTM_MusicInterrupt
+	mov pc, lr
+
+music_interrupt:
+	cmp r0, #0
+	bne .1
+
+	str r1, song_ended
+	.1:
+	movs pc, lr
+
+
 ; ============================================================================
 ; Additional code modules
 ; ============================================================================
 
 screen_addr:
 	.long 0					; ptr to the current VIDC screen bank being written to.
+
+rnd_seed:
+    .long 0x87654321
 
 .include "src/menu.asm"
 .include "src/vubars.asm"
@@ -537,6 +613,7 @@ screen_addr:
 .include "src/logo.asm"
 .include "lib/mode9-palette.asm"
 .include "lib/lz4-decode.asm"
+
 
 ; ============================================================================
 ; Data Segment

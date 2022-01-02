@@ -62,3 +62,5 @@
 .equ QTM_Clear, 0x47E44
 .equ QTM_ReadVULevels, 0x47E51
 .equ QTM_VUBarControl, 0x47E50
+.equ QTM_MusicInterrupt, 0x47E5F
+.equ QTM_MusicOptions, 0x47E5E
