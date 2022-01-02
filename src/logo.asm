@@ -56,7 +56,7 @@ plot_logo_glitched:
     str r0, rnd_seed
 
     ; Pixel offset shift.
-    and r0, r0, #0x07
+    and r0, r0, #0x03
     mov r10, r0, lsl #2     ; pixel shift (4*n)
     rsb r11, r10, #32       ; reverse pixel shift (32-4*n)
 

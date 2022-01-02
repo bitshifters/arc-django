@@ -75,11 +75,11 @@ Now have the correct assets:
 - Add original scroller text. - DONE
 - Add sinewave note sprites. - DONE
 - Add sprite masking and randomise next note. - DONE
-- Better vubars?
+- Better vubars? - DONE
 - Check vertical alignment of all elements. - DONE
 - Implement autoplay & toggle.
 - Fix mouse control to be absolute.
-- Add background colours & fades. - STARTED
+- Add background colours & fades. - DONE
 - Logo glitch on 'load'. - DONE
 - Menu colour highlight polish. - DONE?
 - Intro Rabenauge logo.
@@ -92,3 +92,16 @@ Now have the correct assets:
 - Add readme to the build.
 - Nice fade on escape / exit?
 - Test all on real hardware!
+
+Questions for Steve3000:
+- Should I be using v0.21? Is v0.17 more stable? (Although I need keyboard scan support.)
+- No SWI documentation in the src ZIP? (Been using the documentation from v0.17 ZIP.)
+- The supplied RasterM21 module in the ZIP displays a message saying it is a test version and not for public release?
+- SWI RasterMan_COnfigure seems to have been started but not finished?
+- How do you configure the number of VIDC writes per line?
+- Do I need all 3x VIDC tables even if I only want <=4 VIDC writes per line?
+- Can I just omit the MEMC table?
+- QTMMod_RM module is nearly 89K! Whilst the original QTM v1.45 is 62K...
+- When I issue QTM_Start RasterMan loses timing for a few frames.
+    - Everything moves down by a handful of scanline but eventually settles back to where it should be.
+    - Seem to be able to minimise this by issuing RasterMan_Wait immediately before QTM_Start.

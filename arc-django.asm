@@ -1,5 +1,5 @@
 ; ============================================================================
-; arc-django - An Archimedes port of Chipo Django musicdisk by Rabenauge
+; arc-django - An Archimedes port of Chipo Django musicdisk by Rabenauge.
 ; ============================================================================
 
 .equ _DEBUG, 1
@@ -22,7 +22,7 @@
 .equ VU_Bars_Height, 3
 .equ VU_Bars_Gap, 4
 .equ VU_Bars_Effect, 2	; 'effect'
-.equ VU_Bars_Gravity, 1	; lines per vsync
+.equ VU_Bars_Gravity, 2	; lines per vsync
 
 .equ Horizontal_Divider_1, 98
 .equ Horizontal_Divider_2, 202
@@ -87,36 +87,7 @@ main:
 	; EARLY INIT / LOAD STUFF HERE!
 
 	; RasterMan Init.
-	; Init tables.
-	adr r5, rasterman_tables
-	ldmia r5, {r0-r3}
-	add r0, r0, r5			; vidc table 1
-	add r1, r1, r5			; vidc table 2
-	add r2, r2, r5			; vidc table 3
-	add r3, r3, r5			; memc table
-	stmfd sp!, {r0-r3}
-
-	mov r4, #0
-	mov r6, #0x40000000		; set border colour black.
-	mov r7, r6
-	mov r8, r6
-	mov r9, r6
-	mov r5, #256
-.2:
-	stmia r0!, {r6-r9}		; 4x VIDC commands per line.
-	stmia r1!, {r6-r9}		; 4x VIDC commands per line.
-	stmia r2!, {r6-r9}		; 4x VIDC commands per line.
-	stmia r2!, {r6-r9}		; 4x VIDC commands per line.
-	str r4, [r3], #4
-	str r4, [r3], #4
-	subs r5, r5, #1
-
-	bic r9, r9, #0xff
-	orr r9, r9, r5
-
-	bne .2
-	ldmfd sp!, {r0-r3}
-	swi RasterMan_SetTables
+	bl rasters_init
 
 	; QTM Init.
 	; Required to make QTM play nicely with RasterMan.
@@ -607,6 +578,7 @@ screen_addr:
 .include "src/small-font.asm"
 .include "src/sprites.asm"
 .include "src/logo.asm"
+.include "src/rasters.asm"
 .include "lib/mode9-palette.asm"
 .include "lib/lz4-decode.asm"
 
@@ -631,12 +603,6 @@ vdu_set_border_black:
 .byte 19,0,24,0,0,0
 .align 4
 .endif
-
-rasterman_tables:
-	.long vidc_table_1 - rasterman_tables
-	.long vidc_table_2 - rasterman_tables
-	.long vidc_table_3 - rasterman_tables
-	.long memc_table - rasterman_tables
 
 music_table:
 	.long music_01_mod - music_table
@@ -728,14 +694,14 @@ music_11_mod:
 
 .align 4
 vidc_table_1:
-	.skip 256*16
+	.skip 256*4*4
 
 ; TODO: Can we get rid of these?
 vidc_table_2:
-	.skip 256*16
+	.skip 256*4*4
 
 vidc_table_3:
-	.skip 256*32
+	.skip 256*8*4
 
 memc_table:
-	.skip 256*8
+	.skip 256*2*4
