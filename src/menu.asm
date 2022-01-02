@@ -14,11 +14,10 @@ current_key:
 held_key:
 	.long 0
 
+.if Mouse_Enable
 prev_mouse_y:
 	.long 0
-
-mouse_delta_y:
-	.long 0
+.endif
 
 selection_number:
 	.long 0
@@ -60,8 +59,15 @@ update_menu:
 	bl check_key_debounced
 	beq .4
 
-	mov r1, #IKey_LeftClick
+    ; and space
+    mov r1, #RMKey_Space
+    bl check_key_debounced
+	beq .4
+
+    .if Mouse_Enable
+	mov r1, #RMKey_LeftClick
 	bl check_key_debounced
+    .endif
 	bne .5
 
 	.4:
@@ -71,40 +77,26 @@ update_menu:
 	bl plot_menu_item
 
 .5:
+
+.if Mouse_Enable        ; NB. Not tested!
 	; Check mouse.
-.if 0
 	swi OS_Mouse
 	ldr r0, prev_mouse_y
 	str r1, prev_mouse_y
 	subs r0, r0, r1
 	; R0=mouse delta
+    rsbmi r0, r0, #0
 	cmp r0, #Mouse_Sensitivity
 	blt .6
 
-	; TODO: Dedupe code.
-	ldr r3, selection_number
-	cmp r3, #MAX_SONGS-1
-	bge .6
-	bl plot_menu_item
-	add r3, r3, #1
+    ; Absolute Y.
+    mov r3, #MAX_SONGS
+    mul r3, r1, r3
+    mov r3, r3, lsr #10
 	str r3, selection_number
-
-.6:
-	cmp r0, #-Mouse_Sensitivity
-	bgt .7
-
-	; TODO: Dedupe code.
-	ldr r3, selection_number
-	cmp r3, #0
-	beq .7
-	bl plot_menu_item
-	sub r3, r3, #1
-	str r3, selection_number
-
-.7:
-	str r0, mouse_delta_y
 .endif
 
+.6:
 	; Update selected item.
     ldr r0, vsync_count
     ands r0, r0, #1

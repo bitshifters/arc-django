@@ -78,7 +78,7 @@ Now have the correct assets:
 - Better vubars? - DONE
 - Check vertical alignment of all elements. - DONE
 - Implement autoplay & toggle.
-- Fix mouse control to be absolute.
+- Fix mouse control to be absolute. - DONE BUT NOT TESTED!
 - Add background colours & fades. - DONE
 - Logo glitch on 'load'. - DONE
 - Menu colour highlight polish. - DONE?
@@ -86,7 +86,8 @@ Now have the correct assets:
 - Add Bitshifters intro logo?
 - Extend scrolltext to include Bitshifters credits & greets.
 - Remove dead code and tidy up code into separate files. - STARTED
-- Remove stack from exe?
+- Tidy up RasterMan code including Error handler.
+- Remove stack from exe? Move BSS to separate segment?
 - Compress the overall exe as much as possible.
 - Make !folder icon. - DONE
 - Add readme to the build.
@@ -95,6 +96,7 @@ Now have the correct assets:
 
 Questions for Steve3000:
 - Should I be using v0.21? Is v0.17 more stable? (Although I need keyboard scan support.)
+- Can I use OS_Mouse with RasterMan?
 - No SWI documentation in the src ZIP? (Been using the documentation from v0.17 ZIP.)
 - The supplied RasterM21 module in the ZIP displays a message saying it is a test version and not for public release?
 - SWI RasterMan_COnfigure seems to have been started but not finished?

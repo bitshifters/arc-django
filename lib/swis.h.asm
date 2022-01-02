@@ -44,6 +44,9 @@
 .equ RMKey_ArrowUp, 0x59
 .equ RMKey_ArrowDown, 0x63
 .equ RMKey_Return, 0x47
+.equ RMKey_Space, 0x5f
+.equ RMKey_LeftClick, 0x70
+.equ RMKey_RightClick, 0x72
 
 .equ DynArea_Screen, 2
 

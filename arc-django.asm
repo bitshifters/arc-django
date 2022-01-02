@@ -28,8 +28,10 @@
 .equ Horizontal_Divider_2, 202
 .equ Horizontal_Divider_3, 233
 
-.equ Mouse_Sensitivity, 10
 .equ Glitch_Time, 12
+
+.equ Mouse_Enable, 0
+.equ Mouse_Sensitivity, 10
 
 .include "lib/swis.h.asm"
 
@@ -83,6 +85,12 @@ main:
 	; Seed RND.
 	swi OS_ReadMonotonicTime
 	str r0, rnd_seed
+
+	; Grab mouse.
+	.if Mouse_Enable
+	swi OS_Mouse
+	str r1, prev_mouse_y
+	.endif
 
 	; EARLY INIT / LOAD STUFF HERE!
 
@@ -323,10 +331,12 @@ debug_write_vsync_count:
 	ldr r0, selection_number
 	bl debug_print_r0
 
+.if Mouse_Enable
 	mov r0, #32
 	swi OS_WriteC
 	ldr r0, prev_mouse_y
 	bl debug_print_r0
+.endif
 
 .if 0
 	; display frame count / frame rate etc.
