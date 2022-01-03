@@ -20,7 +20,7 @@ PNG2ARC_FONT=./bin/png2arc_font.py
 PNG2ARC_SPRITE=./bin/png2arc_sprite.py
 PNG2ARC_DEPS:=./bin/png2arc.py ./bin/arc.py ./bin/png2arc_font.py ./bin/png2arc_sprite.py
 FOLDER=!Django01
-HOSTFS=..\..\Arculator_V2.0_Windows/hostfs
+HOSTFS=..\..\Arculator_V2.1_Windows/hostfs
 # TODO: Need a copy command that copes with forward slash directory separator.
 
 ##########################################################################
