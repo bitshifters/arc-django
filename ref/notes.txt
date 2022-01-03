@@ -107,3 +107,4 @@ Questions for Steve3000:
 - When I issue QTM_Start RasterMan loses timing for a few frames.
     - Everything moves down by a handful of scanline but eventually settles back to where it should be.
     - Seem to be able to minimise this by issuing RasterMan_Wait immediately before QTM_Start.
+- Don't seem to get QTM_MusicInterrupt callback when using RasterMan?
