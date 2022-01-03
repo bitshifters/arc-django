@@ -591,11 +591,9 @@ release_music_interrupt:
 	mov pc, lr
 
 music_interrupt:
-	cmp r0, #0
-	bne .1
-
+	cmp r0, #MusicInterrupt_SongEnded
+	movnes pc, lr
 	str r1, song_ended
-	.1:
 	movs pc, lr
 
 ; ============================================================================

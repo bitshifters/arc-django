@@ -74,6 +74,8 @@
 .equ QTM_MusicOptions, 0x47E5E
 .equ QTM_MusicInterrupt, 0x47E5F
 
+.equ MusicInterrupt_SongEnded, 0
+
 .equ RasterMan_Install, 0x47e80
 .equ RasterMan_Release, 0x47e81
 .equ RasterMan_Wait, 0x47e82
