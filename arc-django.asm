@@ -89,7 +89,7 @@ main:
 	; QTM default is 32us, but 48us sounds correct. I presume this is
 	; because chiptune samples are so small they cannot be interpolated
 	; in any meaningful way.
-	mov r0, #48
+	mov r0, #24
 	swi QTM_SetSampleSpeed
 
 	mov r0, #VU_Bars_Effect
