@@ -25,8 +25,10 @@
 
 .if _DEBUG
 .equ Splash_Frames, 3
+.equ Fade_Speed, 1
 .else
 .equ Splash_Frames, 3*50				; 3 seconds.
+.equ Fade_Speed, 3
 .endif
 .equ Menu_Beat_Frames, 25				; 0.5 seconds.
 
@@ -172,7 +174,7 @@ main:
 
 	; Fade.
 	.3:
-	mov r4, #2
+	mov r4, #Fade_Speed
 	bl wait_frames
 	bl palette_update_fade_to_black
 	cmp r0, #0
@@ -273,7 +275,6 @@ main_loop:
 exit:
 	; wait for vsync (any pending buffers)
 	swi RasterMan_Wait
-
 	bl release_music_interrupt
 
 	; disable music
@@ -283,20 +284,29 @@ exit:
 	swi RasterMan_Release
 	swi RasterMan_Wait
 
+	; Fade out.
+	adrl r2, logo_pal_block
+	bl palette_init_fade_to_black
+
+	.1:
+	mov r4, #Fade_Speed
+	bl wait_frames
+	bl palette_update_fade_to_black
+	cmp r0, #0
+	bne .1
+
 	; release our error handler
 	mov r0, #ErrorV
 	adr r1, error_handler
 	mov r2, #0
 	swi OS_Release
 
-	; Display whichever bank we've just written to
-	mov r0, #OSByte_WriteDisplayBank
-	ldr r1, scr_bank
-	swi OS_Byte
-	; and write to it
-	mov r0, #OSByte_WriteVDUBank
-	ldr r1, scr_bank
-	swi OS_Byte
+	mov r0, #12
+	SWI OS_WriteC
+	MOV r0,#22	;Set MODE
+	SWI OS_WriteC
+	MOV r0,#Screen_Mode
+	SWI OS_WriteC
 
 	SWI OS_Exit
 

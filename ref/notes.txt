@@ -83,11 +83,11 @@ Now have the correct assets:
 - Logo glitch on 'load'. - DONE
 - Menu colour highlight polish. - DONE?
 - Extend rasters into the border. - WAIT FOR RASTERMAN UPDATE
-- Intro Rabenauge logo.
+- Intro Rabenauge logo. - DONE
 - Add Bitshifters intro logo?
 - Extend scrolltext to include Bitshifters credits & greets.
 - Remove dead code and tidy up code into separate files. - DONE?
-- Tidy up RasterMan code including Error handler.
+- Tidy up RasterMan code including Error handler. - STARTED
 - Remove stack from exe? Move BSS to separate segment?
 - Compress the overall exe as much as possible.
 - Make !folder icon. - DONE

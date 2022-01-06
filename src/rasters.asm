@@ -35,15 +35,19 @@ rasters_init:
     ; Add some actual rasters.
     ; Scroller area.
     ; Blue background gradient.
-    mov r5, #248
+    mov r5, #247
 	mov r6, #0x00000000		; set physical colour 0.
     str r6, [r0]            ; scanline 0.
 .2:
     str r6, [r0, r5, lsl #4]
     add r6, r6, #0x200
     add r5, r5, #1
-    cmp r5, #256
+    cmp r5, #255
     bne .2
+
+    ; Last line black!
+	mov r6, #0x00000000		; set physical colour 0.
+    str r6, [r0, r5, lsl #4]
 
     ; Scroller purple gradient.
     add r0, r0, #4          ; next VIDC command
