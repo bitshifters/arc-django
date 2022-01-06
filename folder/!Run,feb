@@ -4,7 +4,7 @@ RMLoad <Demo$Dir>.MemAlloc
 SCREENSIZE 80K
 RMKILL MemAlloc 
 
-RMLOAD <Demo$Dir>.QTMMod_RM
+RMLOAD <Demo$Dir>.QTMModSE
 RMLOAD <Demo$Dir>.RasterM21
 wimpslot -min 480k
 <Demo$Dir>.!RunImage

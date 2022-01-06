@@ -77,22 +77,25 @@ Now have the correct assets:
 - Add sprite masking and randomise next note. - DONE
 - Better vubars? - DONE
 - Check vertical alignment of all elements. - DONE
-- Implement autoplay & toggle.
-- Fix mouse control to be absolute. - DONE BUT NOT TESTED!
+- Implement autoplay & toggle. - DONE
+- Fix mouse control to be absolute. - NEED RASTERMAN UPDATE
 - Add background colours & fades. - DONE
 - Logo glitch on 'load'. - DONE
 - Menu colour highlight polish. - DONE?
+- Extend rasters into the border. - WAIT FOR RASTERMAN UPDATE
 - Intro Rabenauge logo.
 - Add Bitshifters intro logo?
 - Extend scrolltext to include Bitshifters credits & greets.
-- Remove dead code and tidy up code into separate files. - STARTED
+- Remove dead code and tidy up code into separate files. - DONE?
 - Tidy up RasterMan code including Error handler.
 - Remove stack from exe? Move BSS to separate segment?
 - Compress the overall exe as much as possible.
 - Make !folder icon. - DONE
 - Add readme to the build.
+- Sort CR/LF in !Run. Python tool?
 - Nice fade on escape / exit?
-- Test all on real hardware!
+- Fade volume on song change.
+- Test all on real hardware! - DONE BUT CONFIRM BEFORE RELEASE!
 
 Questions for Steve3000:
 - Should I be using v0.21? Is v0.17 more stable? (Although I need keyboard scan support.)
@@ -108,3 +111,11 @@ Questions for Steve3000:
     - Everything moves down by a handful of scanline but eventually settles back to where it should be.
     - Seem to be able to minimise this by issuing RasterMan_Wait immediately before QTM_Start.
 - Don't seem to get QTM_MusicInterrupt callback when using RasterMan?
+
+Answers from Steve3000:
+- Use v0.21.
+- Fixed Music Interrupt callback in v1.45d SE of QTM.
+- No RasterMan_Configure but will supply a special build w/ just 4x VIDC writes.
+- Implementing OS_Mouse.
+- Looking into QTM_Start timing slip "I suspect that’s caused by one of the many calls QTM makes to the RISC OS Sound manager (to manage the bugs in the RISC OS sound code you have to set parameters in a very specific order, resulting in multiple calls). Somewhere along the line, the sound manager is re-enabling IRQs, and impacting the RM’s timing, which then takes a few VSyncs to settle back to normal."
+- Will look into "borked" samples, was supposed to be fixed in v0.20 - supply startup code.

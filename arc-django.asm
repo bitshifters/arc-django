@@ -115,6 +115,9 @@ main:
 	mov r1, #VU_Bars_Gravity
 	swi QTM_VUBarControl
 
+	; QTM callback.
+	bl claim_music_interrupt
+
 	; Clear all screen buffers
 	mov r1, #1
 .1:
@@ -135,19 +138,11 @@ main:
 	mov r1, #1
 	str r1, scr_bank
 
-.if 0	
 	; Claim the Error vector.
 	MOV r0, #ErrorV
 	ADR r1, error_handler
 	MOV r2, #0
 	SWI OS_Claim
-
-	; Claim the Event vector.
-	mov r0, #EventV
-	adr r1, event_handler
-	mov r2, #0
-	swi OS_AddToVector
-.endif
 
 	; LATE INITALISATION HERE!
 
@@ -169,35 +164,18 @@ main:
 	mov r0, #0
 	bl play_song
 
-	; Enable Vsync event
-;	mov r0, #OSByte_EventEnable
-;	mov r1, #Event_VSync
-;	SWI OS_Byte
-
+	; Fire up the RasterMan!
 	swi RasterMan_Install
 
 main_loop:
 
-
 	; Block if we've not even had a vsync since last time - we're >50Hz!
-;	ldr r1, last_vsync
-;.1:
-;	ldr r2, vsync_count
-;	cmp r1, r2
-;	beq .1
-;	.if _FIX_FRAME_RATE
-;	mov r0, #1
-;	.else
-;	sub r0, r2, r1
-;	.endif
-;	str r2, last_vsync
-;	str r0, vsync_delta
-
 	swi RasterMan_Wait
-	ldr r2, vsync_count
-	add r2, r2, #1
-	str r2, vsync_count
 
+	mov r0, #1
+	ldr r2, vsync_count
+	add r2, r2, r0
+	str r2, vsync_count
 	; R0 = vsync delta since last frame.
 
 	; show debug
@@ -206,9 +184,6 @@ main_loop:
 	.endif
 
 	; DO STUFF HERE!
-;	bl get_next_screen_for_writing
-;	ldr r8, screen_addr
-;	bl show_screen_at_vsync
 
 	; scroll the bottom.
 	bl scroller_update
@@ -242,46 +217,55 @@ main_loop:
 	swi OS_WriteN
 	.endif
 
-	bl keyboard_scan_debounced
-
 	; exit if Escape is pressed
-;	mov r1, #IKey_Escape
-;	bl check_key
-;	beq exit
-
 	swi RasterMan_ScanKeyboard
 	mov r1, #0xc0c0
 	cmp r0, r1
 	beq exit
 
 	; do menu.
+	bl keyboard_scan_debounced
 	bl update_menu
 
+	; autoplay!
+	bl check_autoplay
+
+	; repeat!
 	b main_loop
 
-; R1=IKey no.
-check_key:
-	movs r1, #0xff
-	mov pc, lr
+exit:
+	; wait for vsync (any pending buffers)
+	swi RasterMan_Wait
 
-	mov r0, #OSByte_ReadKey
-	mov r2, #0xff
+	bl release_music_interrupt
+
+	; disable music
+	mov r0, #0
+	swi QTM_Stop
+
+	swi RasterMan_Release
+	swi RasterMan_Wait
+
+	; release our error handler
+	mov r0, #ErrorV
+	adr r1, error_handler
+	mov r2, #0
+	swi OS_Release
+
+	; Display whichever bank we've just written to
+	mov r0, #OSByte_WriteDisplayBank
+	ldr r1, scr_bank
 	swi OS_Byte
-	cmp r1, #0xff
-	cmpeq r2, #0xff
-	mov pc, lr
+	; and write to it
+	mov r0, #OSByte_WriteVDUBank
+	ldr r1, scr_bank
+	swi OS_Byte
 
-song_number:
-	.long -1
+	SWI OS_Exit
 
-glitch_timer:
-	.long 0
-
-error_noscreenmem:
-	.long 0
-	.byte "Cannot allocate screen memory!"
-	.align 4
-	.long 0
+; ============================================================================
+; Debug helpers.
+; ============================================================================
 
 .if _DEBUG
 debug_print_r0:
@@ -328,7 +312,12 @@ debug_write_vsync_count:
 
 	mov r0, #32
 	swi OS_WriteC
-	ldr r0, selection_number
+	ldr r0, autoplay_flag
+	bl debug_print_r0
+
+	mov r0, #32
+	swi OS_WriteC
+	ldr r0, song_ended
 	bl debug_print_r0
 
 .if Mouse_Enable
@@ -354,6 +343,16 @@ debug_string:
 	.skip 8
 .endif
 
+; ============================================================================
+; System stuff.
+; ============================================================================
+
+error_noscreenmem:
+	.long 0
+	.byte "Cannot allocate screen memory!"
+	.align 4
+	.long 0
+
 get_screen_addr:
 	str lr, [sp, #-4]!
 	adrl r0, screen_addr_input
@@ -364,48 +363,14 @@ get_screen_addr:
 screen_addr_input:
 	.long VD_ScreenStart, -1
 
-exit:
-	swi RasterMan_Wait
+; TODO: rename these to be clearer.
+scr_bank:
+	.long 0				; current VIDC screen bank being written to.
 
-	; disable music
-	mov r0, #0
-	swi QTM_Stop
-
-	swi RasterMan_Release
-
-	; wait for vsync (any pending buffers)
-	swi RasterMan_Wait
+vsync_count:
+	.long 0				; current vsync count from start of exe.
 
 .if 0
-	; disable vsync event
-	mov r0, #OSByte_EventDisable
-	mov r1, #Event_VSync
-	swi OS_Byte
-
-	; release our event handler
-	mov r0, #EventV
-	adr r1, event_handler
-	mov r2, #0
-	swi OS_Release
-
-	; release our error handler
-	mov r0, #ErrorV
-	adr r1, error_handler
-	mov r2, #0
-	swi OS_Release
-
-	; Display whichever bank we've just written to
-	mov r0, #OSByte_WriteDisplayBank
-	ldr r1, scr_bank
-	swi OS_Byte
-	; and write to it
-	mov r0, #OSByte_WriteVDUBank
-	ldr r1, scr_bank
-	swi OS_Byte
-.endif
-
-	SWI OS_Exit
-
 ; R0=event number
 event_handler:
 	cmp r0, #Event_VSync
@@ -480,74 +445,55 @@ event_handler:
 	LDMIA sp!, {r2-r12}
 	LDMIA sp!, {r0-r1, pc}
 
-; TODO: rename these to be clearer.
-scr_bank:
-	.long 0				; current VIDC screen bank being written to.
-
-palette_block_addr:
-	.long 0				; (optional) ptr to a block of palette data for the screen bank being written to.
-
-vsync_count:
-	.long 0				; current vsync count from start of exe.
-
-last_vsync:
-	.long 0				; vsync count at start of previous frame.
-
-vsync_delta:
-	.long 0
-
 buffer_pending:
 	.long 0				; screen bank number to display at vsync.
 
 palette_pending:
 	.long 0				; (optional) ptr to a block of palette data to set at vsync.
+.endif
 
 error_handler:
 	STMDB sp!, {r0-r2, lr}
-	MOV r0, #OSByte_EventDisable
-	MOV r1, #Event_VSync
-	SWI OS_Byte
-	MOV r0, #EventV
-	ADR r1, event_handler
-	mov r2, #0
-	SWI OS_Release
+
+	; Release error handler.
 	MOV r0, #ErrorV
 	ADR r1, error_handler
 	MOV r2, #0
 	SWI OS_Release
+
+	; Write & display current screen bank.
 	MOV r0, #OSByte_WriteDisplayBank
 	LDR r1, scr_bank
 	SWI OS_Byte
+
+	; Do these help?
+	swi QTM_Stop
+	swi RasterMan_Release
+
 	LDMIA sp!, {r0-r2, lr}
 	MOVS pc, lr
-
-show_screen_at_vsync:
-	; Show current bank at next vsync
-	ldr r1, scr_bank
-	str r1, buffer_pending
-	; Including its associated palette
-	ldr r1, palette_block_addr
-	str r1, palette_pending
-	mov pc, lr
-
-get_next_screen_for_writing:
-	; Increment to next bank for writing
-	ldr r1, scr_bank
-	add r1, r1, #1
-	cmp r1, #Screen_Banks
-	movgt r1, #1
-	str r1, scr_bank
-
-	; Now set the screen bank to write to
-	mov r0, #OSByte_WriteVDUBank
-	swi OS_Byte
-
-	; Back buffer address for writing bank stored at screen_addr
-	b get_screen_addr
 
 ; ============================================================================
 ; Play the music!
 ; ============================================================================
+
+glitch_timer:
+	.long 0
+
+song_number:
+	.long -1
+
+autoplay_flag:
+	.long 0		; set to MAX_SONGS when enabled.
+
+song_ended:
+	.long 0
+
+prev_music_interrupt:
+	.long 0
+
+prev_interrupt_sp:
+	.long 0
 
 play_song:
 	swi QTM_Stop
@@ -574,6 +520,58 @@ play_song:
 	mov r0, #Glitch_Time
 	str r0, glitch_timer
 	mov pc, lr
+
+check_autoplay:
+	ldr r1, song_ended
+	cmp r1, #0
+	moveq pc, lr
+
+	ldr r0, autoplay_flag
+	cmp r0, #0
+	moveq pc, lr
+
+	str lr, [sp, #-4]!
+	ldr r0, song_number
+	mov r3, r0
+	add r0, r0, #1
+	cmp r0, #MAX_SONGS
+	movge, r0, #0
+	bl play_song
+
+	; R3=old item,
+	bl plot_menu_item
+	ldr r3, song_number
+	bl plot_menu_item
+
+	mov r0, #0
+	str r0, song_ended
+	ldr pc, [sp], #4
+
+claim_music_interrupt:
+	mov r0, #2
+	mov r1, #2
+	swi QTM_MusicOptions
+
+	mov r0, #0
+	adr r1, music_interrupt
+	mov r2, #0
+	swi QTM_MusicInterrupt
+	str r1, prev_music_interrupt
+	str r2, prev_interrupt_sp
+	mov pc, lr
+
+release_music_interrupt:
+	mov r0, #0
+	ldr r1, prev_music_interrupt
+	ldr r2, prev_interrupt_sp
+	swi QTM_MusicInterrupt
+	mov pc, lr
+
+music_interrupt:
+	cmp r0, #MusicInterrupt_SongEnded
+	movnes pc, lr
+	str r1, song_ended
+	movs pc, lr
 
 ; ============================================================================
 ; Additional code modules
