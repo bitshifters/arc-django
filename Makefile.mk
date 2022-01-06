@@ -48,7 +48,7 @@ code: assets music
 .PHONY:assets
 assets: ./build/logo.lz4 ./build/logo.bin.pal ./build/scroller_font.bin \
 	./build/note1.bin ./build/note2.bin ./build/note3.bin ./build/note4.bin \
-	./build/note5.bin ./build/icon.bin
+	./build/note5.bin ./build/icon.bin ./build/rabenauge.lz4 ./build/rabenauge.bin.pal
 
 .PHONY:music
 music: ./build/music_01.bin ./build/music_02.bin ./build/music_03.bin \
@@ -100,6 +100,11 @@ clean:
 ./build/icon.bin: ./data/gfx/icon.png $(PNG2ARC_DEPS)
 	$(MKDIR_P) "./build"
 	$(PYTHON2) $(PNG2ARC_SPRITE) --name !django01 -o $@ $< 9
+
+./build/rabenauge.lz4: ./build/rabenauge.bin
+./build/rabenauge.bin: ./data/gfx/rabenauge-logo4.png $(PNG2ARC_DEPS)
+	$(MKDIR_P) "./build"
+	$(PYTHON2) $(PNG2ARC) -o $@ -p $@.pal $< 9
 
 ##########################################################################
 ##########################################################################

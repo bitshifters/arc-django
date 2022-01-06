@@ -32,6 +32,57 @@ palette_set_block:
     blt .1
 	ldr pc, [sp], #4			; rts
 
+; R0 = [0-16] interpolation
+; R2 = palette block ptr
+palette_make_fade_to_black:
+	str lr, [sp, #-4]!			; push lr on stack
+    adr r1, palette_interp_block
+
+    mov r3, #16
+    .1:
+    ldr r4, [r2], #4            ; rgbx
+
+    mov r5, r4, lsr #4          ; rgbx / 16
+    mul r6, r5, r0              ; r0 * rgbx / 16
+
+    str r6, [r1], #4
+    
+    subs r3, r3, #1
+    bne .1
+	ldr pc, [sp], #4			; rts
+
+; R2 = source palette block ptr
+palette_init_fade_to_black:
+    str r2, palette_source
+    mov r0, #16
+    str r0, palette_interp
+    mov pc, lr
+
+; TODO: Make this generic fade routine?
+; Returns interp value in R0.
+palette_update_fade_to_black:
+   	str lr, [sp, #-4]!			; push lr on stack
+    ldr r0, palette_interp
+    cmp r0, #0
+	ldreq pc, [sp], #4			; rts
+
+    ldr r2, palette_source
+    bl palette_make_fade_to_black
+
+    adr r2, palette_interp_block
+    bl palette_set_block
+
+    ldr r0, palette_interp
+    subs r0, r0, #1
+    str r0, palette_interp
+	ldr pc, [sp], #4			; rts
+
+palette_source:
+    .long 0
+
+palette_interp:
+    .long 0
+
 .if 0
 ; R2 = palette block ptr
 palette_make_greyscale:
@@ -55,25 +106,6 @@ palette_make_greyscale:
     orr r0, r0, r0, lsl #8
 
     str r0, [r1], #4
-    
-    subs r3, r3, #1
-    bne .1
-	ldr pc, [sp], #4			; rts
-
-; R0 = [0-16] interpolation
-; R2 = palette block ptr
-palette_make_fade_to_black:
-	str lr, [sp, #-4]!			; push lr on stack
-    adr r1, palette_interp_block
-
-    mov r3, #16
-    .1:
-    ldr r4, [r2], #4            ; rgbx
-
-    mov r5, r4, lsr #4          ; rgbx / 16
-    mul r6, r5, r0              ; r0 * rgbx / 16
-
-    str r6, [r1], #4
     
     subs r3, r3, #1
     bne .1
@@ -105,10 +137,10 @@ palette_make_fade_to_white:
 
 solid_white:
     .long 0x00f0f0f0
+.endif
 
 palette_interp_block:
     .skip 64
-.endif
 
 .align 4
 palette_osword_block:

@@ -3,8 +3,7 @@
 ; ============================================================================
 
 .equ _DEBUG, 1
-.equ _FIX_FRAME_RATE, 0					; useful for !DDT breakpoints
-.equ _DEBUG_RASTERS, (_DEBUG && 0)
+.equ _DEBUG_RASTERS, (_DEBUG && 0)		; I don't think this works with RasterMan?
 
 .equ Screen_Banks, 1
 .equ Screen_Mode, 9
@@ -15,6 +14,21 @@
 .equ Screen_Stride, Screen_Width/Screen_PixelsPerByte
 .equ Screen_Bytes, Screen_Stride*Screen_Height
 .equ Mode_Bytes, Screen_Stride*Mode_Height
+
+.include "lib/swis.h.asm"
+
+; ============================================================================
+; App defines
+; ============================================================================
+
+.equ MAX_SONGS, 11
+
+.if _DEBUG
+.equ Splash_Frames, 3
+.else
+.equ Splash_Frames, 3*50				; 3 seconds.
+.endif
+.equ Menu_Beat_Frames, 25				; 0.5 seconds.
 
 .equ Scroller_Y_Pos, 237
 
@@ -33,23 +47,19 @@
 .equ Mouse_Enable, 0
 .equ Mouse_Sensitivity, 10
 
-.include "lib/swis.h.asm"
-
 ; ============================================================================
-; App defines
+; Code Start
 ; ============================================================================
-
-.equ MAX_SONGS, 11
 
 .org 0x8000
-
-; ============================================================================
-; Stack
-; ============================================================================
 
 Start:
     adrl sp, stack_base
 	B main
+
+; ============================================================================
+; Stack
+; ============================================================================
 
 .skip 1024
 stack_base:
@@ -145,13 +155,40 @@ main:
 	SWI OS_Claim
 
 	; LATE INITALISATION HERE!
+	bl get_screen_addr
+
+	; Splash.
+	adrl r2, rabenauge_pal_block
+	bl palette_init_fade_to_black
+	bl palette_set_block
+
+	adr r0, rabenauge_splash
+	ldr r1, screen_addr
+	bl unlz4
+
+	; Pause.
+	mov r4, #Splash_Frames
+	bl wait_frames
+
+	; Fade.
+	.3:
+	mov r4, #2
+	bl wait_frames
+	bl palette_update_fade_to_black
+	cmp r0, #0
+	bne .3
+
+	; Pause.
+	mov r4, #Menu_Beat_Frames
+	bl wait_frames
+
+	; Menu Screen.
 
 	; Set palette.
 	adrl r2, logo_pal_block
 	bl palette_set_block
 
 	; Draw logo.
-	bl get_screen_addr
 	ldr r12, screen_addr
 	adrl r9, logo_data
 	bl plot_logo
@@ -262,6 +299,13 @@ exit:
 	swi OS_Byte
 
 	SWI OS_Exit
+
+wait_frames:
+	mov r0, #19
+	swi OS_Byte
+	subs r4, r4, #1
+	bne wait_frames
+	mov pc, lr
 
 ; ============================================================================
 ; Debug helpers.
@@ -632,6 +676,14 @@ logo_pal_block:
 .align 4
 logo_data:
 .incbin "build/logo.bin"
+
+.align 4
+rabenauge_pal_block:
+.incbin "build/rabenauge.bin.pal"
+
+.align 4
+rabenauge_splash:
+.incbin "build/rabenauge.lz4"
 
 scroller_text_string:
 	.include "src/scrolltxt-final.asm"
