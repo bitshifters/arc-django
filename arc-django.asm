@@ -138,19 +138,11 @@ main:
 	mov r1, #1
 	str r1, scr_bank
 
-.if 0	
 	; Claim the Error vector.
 	MOV r0, #ErrorV
 	ADR r1, error_handler
 	MOV r2, #0
 	SWI OS_Claim
-
-	; Claim the Event vector.
-	mov r0, #EventV
-	adr r1, event_handler
-	mov r2, #0
-	swi OS_AddToVector
-.endif
 
 	; LATE INITALISATION HERE!
 
@@ -172,11 +164,7 @@ main:
 	mov r0, #0
 	bl play_song
 
-	; Enable Vsync event
-;	mov r0, #OSByte_EventEnable
-;	mov r1, #Event_VSync
-;	SWI OS_Byte
-
+	; Fire up the RasterMan!
 	swi RasterMan_Install
 
 main_loop:
@@ -245,11 +233,39 @@ main_loop:
 	; repeat!
 	b main_loop
 
-error_noscreenmem:
-	.long 0
-	.byte "Cannot allocate screen memory!"
-	.align 4
-	.long 0
+exit:
+	; wait for vsync (any pending buffers)
+	swi RasterMan_Wait
+
+	bl release_music_interrupt
+
+	; disable music
+	mov r0, #0
+	swi QTM_Stop
+
+	swi RasterMan_Release
+	swi RasterMan_Wait
+
+	; release our error handler
+	mov r0, #ErrorV
+	adr r1, error_handler
+	mov r2, #0
+	swi OS_Release
+
+	; Display whichever bank we've just written to
+	mov r0, #OSByte_WriteDisplayBank
+	ldr r1, scr_bank
+	swi OS_Byte
+	; and write to it
+	mov r0, #OSByte_WriteVDUBank
+	ldr r1, scr_bank
+	swi OS_Byte
+
+	SWI OS_Exit
+
+; ============================================================================
+; Debug helpers.
+; ============================================================================
 
 .if _DEBUG
 debug_print_r0:
@@ -296,7 +312,7 @@ debug_write_vsync_count:
 
 	mov r0, #32
 	swi OS_WriteC
-	ldr r0, selection_number
+	ldr r0, autoplay_flag
 	bl debug_print_r0
 
 	mov r0, #32
@@ -327,6 +343,16 @@ debug_string:
 	.skip 8
 .endif
 
+; ============================================================================
+; System stuff.
+; ============================================================================
+
+error_noscreenmem:
+	.long 0
+	.byte "Cannot allocate screen memory!"
+	.align 4
+	.long 0
+
 get_screen_addr:
 	str lr, [sp, #-4]!
 	adrl r0, screen_addr_input
@@ -337,50 +363,14 @@ get_screen_addr:
 screen_addr_input:
 	.long VD_ScreenStart, -1
 
-exit:
-	swi RasterMan_Wait
+; TODO: rename these to be clearer.
+scr_bank:
+	.long 0				; current VIDC screen bank being written to.
 
-	bl release_music_interrupt
-
-	; disable music
-	mov r0, #0
-	swi QTM_Stop
-
-	swi RasterMan_Release
-
-	; wait for vsync (any pending buffers)
-	swi RasterMan_Wait
+vsync_count:
+	.long 0				; current vsync count from start of exe.
 
 .if 0
-	; disable vsync event
-	mov r0, #OSByte_EventDisable
-	mov r1, #Event_VSync
-	swi OS_Byte
-
-	; release our event handler
-	mov r0, #EventV
-	adr r1, event_handler
-	mov r2, #0
-	swi OS_Release
-
-	; release our error handler
-	mov r0, #ErrorV
-	adr r1, error_handler
-	mov r2, #0
-	swi OS_Release
-
-	; Display whichever bank we've just written to
-	mov r0, #OSByte_WriteDisplayBank
-	ldr r1, scr_bank
-	swi OS_Byte
-	; and write to it
-	mov r0, #OSByte_WriteVDUBank
-	ldr r1, scr_bank
-	swi OS_Byte
-.endif
-
-	SWI OS_Exit
-
 ; R0=event number
 event_handler:
 	cmp r0, #Event_VSync
@@ -455,44 +445,31 @@ event_handler:
 	LDMIA sp!, {r2-r12}
 	LDMIA sp!, {r0-r1, pc}
 
-; TODO: rename these to be clearer.
-scr_bank:
-	.long 0				; current VIDC screen bank being written to.
-
-palette_block_addr:
-	.long 0				; (optional) ptr to a block of palette data for the screen bank being written to.
-
-vsync_count:
-	.long 0				; current vsync count from start of exe.
-
-last_vsync:
-	.long 0				; vsync count at start of previous frame.
-
-vsync_delta:
-	.long 0
-
 buffer_pending:
 	.long 0				; screen bank number to display at vsync.
 
 palette_pending:
 	.long 0				; (optional) ptr to a block of palette data to set at vsync.
+.endif
 
 error_handler:
 	STMDB sp!, {r0-r2, lr}
-	MOV r0, #OSByte_EventDisable
-	MOV r1, #Event_VSync
-	SWI OS_Byte
-	MOV r0, #EventV
-	ADR r1, event_handler
-	mov r2, #0
-	SWI OS_Release
+
+	; Release error handler.
 	MOV r0, #ErrorV
 	ADR r1, error_handler
 	MOV r2, #0
 	SWI OS_Release
+
+	; Write & display current screen bank.
 	MOV r0, #OSByte_WriteDisplayBank
 	LDR r1, scr_bank
 	SWI OS_Byte
+
+	; Do these help?
+	swi QTM_Stop
+	swi RasterMan_Release
+
 	LDMIA sp!, {r0-r2, lr}
 	MOVS pc, lr
 
@@ -507,7 +484,7 @@ song_number:
 	.long -1
 
 autoplay_flag:
-	.long 1
+	.long 0		; set to MAX_SONGS when enabled.
 
 song_ended:
 	.long 0

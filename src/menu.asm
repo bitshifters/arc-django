@@ -47,7 +47,7 @@ update_menu:
 	bne .3
 
 	ldr r3, selection_number
-	cmp r3, #MAX_SONGS-1
+	cmp r3, #MAX_SONGS
 	bge .3
 	bl plot_menu_item
 	add r3, r3, #1
@@ -72,7 +72,22 @@ update_menu:
 
 	.4:
 	ldr r3, song_number
+
 	ldr r0, selection_number
+	cmp r0, #MAX_SONGS
+	blt .9
+
+	; Toggle autplay.
+	ldr r0, autoplay_flag
+	eor r0, r0, #MAX_SONGS
+	str r0, autoplay_flag
+
+	mov r3, #MAX_SONGS
+	bl plot_menu_item
+	b .5
+
+	; Play song in R0.
+	.9:
 	bl play_song
 	bl plot_menu_item
 
@@ -177,6 +192,8 @@ plot_menu:
 plot_menu_item:
 	mov r0, #0
 	ldr r1, song_number
+	cmp r3, #MAX_SONGS		; autoplay hack.
+	ldreq r1, autoplay_flag
 	cmp r3, r1
 	moveq r0, #SmallFont_BoldBase
 	str r0, small_font_bold_flag
