@@ -163,22 +163,27 @@ main:
 	adrl r2, rabenauge_pal_block
 	bl palette_init_fade_to_black
 	bl palette_set_block
-
 	adr r0, rabenauge_splash
 	ldr r1, screen_addr
 	bl unlz4
-
 	; Pause.
 	mov r4, #Splash_Frames
 	bl wait_frames
-
 	; Fade.
-	.3:
-	mov r4, #Fade_Speed
+	bl fade_out
+
+	; Bitshifters.
+	adr r0, bitshifters_splash
+	ldr r1, screen_addr
+	bl unlz4
+	adrl r2, bitshifters_pal_block
+	bl palette_init_fade_to_black
+	bl palette_set_block
+	; Pause.
+	mov r4, #Splash_Frames
 	bl wait_frames
-	bl palette_update_fade_to_black
-	cmp r0, #0
-	bne .3
+	; Fade.
+	bl fade_out
 
 	; Pause.
 	mov r4, #Menu_Beat_Frames
@@ -287,13 +292,7 @@ exit:
 	; Fade out.
 	adrl r2, logo_pal_block
 	bl palette_init_fade_to_black
-
-	.1:
-	mov r4, #Fade_Speed
-	bl wait_frames
-	bl palette_update_fade_to_black
-	cmp r0, #0
-	bne .1
+	bl fade_out
 
 	; release our error handler
 	mov r0, #ErrorV
@@ -316,6 +315,16 @@ wait_frames:
 	subs r4, r4, #1
 	bne wait_frames
 	mov pc, lr
+
+fade_out:
+	str lr, [sp, #-4]!
+	.1:
+	mov r4, #Fade_Speed
+	bl wait_frames
+	bl palette_update_fade_to_black
+	cmp r0, #0
+	bne .1
+	ldr pc, [sp], #4
 
 ; ============================================================================
 ; Debug helpers.
@@ -694,6 +703,15 @@ rabenauge_pal_block:
 .align 4
 rabenauge_splash:
 .incbin "build/rabenauge.lz4"
+
+.align 4
+bitshifters_pal_block:
+.incbin "build/bitshifters.bin.pal"
+
+.align 4
+bitshifters_splash:
+.incbin "build/bitshifters.lz4"
+
 
 scroller_text_string:
 	.include "src/scrolltxt-final.asm"
