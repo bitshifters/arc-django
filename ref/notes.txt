@@ -91,8 +91,9 @@ Now have the correct assets:
 - Remove stack from exe? Move BSS to separate segment?
 - Compress the overall exe as much as possible.
 - Make !folder icon. - DONE
-- Add readme to the build.
-- Sort CR/LF in !Run. Python tool?
+- Add readme to the build. - DONE
+- Extend readme with Bitshifters credits & greet.
+- Sort CR/LF in !Run. Python tool? - DONE with dos2unix
 - Nice fade on escape / exit? - DONE
 - Fade volume on song change.
 - Test all on real hardware! - DONE BUT CONFIRM BEFORE RELEASE!

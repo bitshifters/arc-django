@@ -54,6 +54,16 @@ update_menu:
 	str r3, selection_number
 
 .3:
+	; Can't select new song if fade is active.
+	ldr r0, volume_fade
+	cmp r0, #0
+	bne .5
+
+	; check A for toggle autoplay
+	mov r1, #RMKey_A
+	bl check_key_debounced
+	beq .10
+
 	; check return
 	mov r1, #RMKey_Return
 	bl check_key_debounced
@@ -70,6 +80,7 @@ update_menu:
     .endif
 	bne .5
 
+	; Select menu item.
 	.4:
 	ldr r3, song_number
 
@@ -77,6 +88,7 @@ update_menu:
 	cmp r0, #MAX_SONGS
 	blt .9
 
+.10:
 	; Toggle autplay.
 	ldr r0, autoplay_flag
 	eor r0, r0, #MAX_SONGS
@@ -86,8 +98,12 @@ update_menu:
 	bl plot_menu_item
 	b .5
 
-	; Play song in R0.
 	.9:
+	; Don't restart current song as can be spammed.
+	cmp r0, r3
+	beq .5
+
+	; Play song in R0.
 	bl play_song
 	bl plot_menu_item
 

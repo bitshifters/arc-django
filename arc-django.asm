@@ -558,6 +558,9 @@ prev_music_interrupt:
 prev_interrupt_sp:
 	.long 0
 
+volume_fade:
+	.long 0
+
 play_song:
 	swi QTM_Stop
 	; Unload the current module.
@@ -574,6 +577,9 @@ play_song:
 	mov r0, #0					; load from address
 	swi QTM_Load
 
+	mov r0, #64					; max volume
+	swi QTM_Volume
+
 	; This seems to help minimise how much RasterMan timing slips after QTM_Start.
 	swi RasterMan_Wait
 
@@ -585,6 +591,10 @@ play_song:
 	mov pc, lr
 
 check_autoplay:
+	ldr r0, volume_fade
+	cmp r0, #0
+	bne .1
+
 	ldr r1, song_ended
 	cmp r1, #0
 	moveq pc, lr
@@ -593,6 +603,19 @@ check_autoplay:
 	cmp r0, #0
 	moveq pc, lr
 
+	mov r0, #64
+	str r0, volume_fade
+	mov pc, lr
+
+.1:
+	subs r0, r0, #1
+	str r0, volume_fade
+	beq .2
+
+	swi QTM_Volume
+	mov pc, lr
+
+.2:
 	str lr, [sp, #-4]!
 	ldr r0, song_number
 	mov r3, r0
