@@ -95,7 +95,7 @@ Now have the correct assets:
 - Extend readme with Bitshifters credits & greet.
 - Sort CR/LF in !Run. Python tool? - DONE with dos2unix
 - Nice fade on escape / exit? - DONE
-- Fade volume on song change.
+- Fade volume on song change. - DONE FOR AUTOPLAY
 - Test all on real hardware! - DONE BUT CONFIRM BEFORE RELEASE!
 
 Questions for Steve3000:

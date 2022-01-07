@@ -294,18 +294,24 @@ exit:
 	bl palette_init_fade_to_black
 	bl fade_out
 
-	; release our error handler
+	; Release our error handler
 	mov r0, #ErrorV
 	adr r1, error_handler
 	mov r2, #0
 	swi OS_Release
 
+	; Clear screen.
 	mov r0, #12
 	SWI OS_WriteC
 	MOV r0,#22	;Set MODE
 	SWI OS_WriteC
 	MOV r0,#Screen_Mode
 	SWI OS_WriteC
+
+	; Flush keyboard buffer.
+	mov r0, #15
+	mov r1, #1
+	swi OS_Byte
 
 	SWI OS_Exit
 
