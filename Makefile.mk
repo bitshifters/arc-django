@@ -23,7 +23,7 @@ PNG2ARC_SPRITE=./bin/png2arc_sprite.py
 PNG2ARC_DEPS:=./bin/png2arc.py ./bin/arc.py ./bin/png2arc_font.py ./bin/png2arc_sprite.py
 FOLDER=!Django01
 HOSTFS=..\..\Arculator_V2.1_Windows/hostfs
-# TODO: Need a copy command that copes with forward slash directory separator.
+# TODO: Need a copy command that copes with forward slash directory separator. (Maybe MSYS cp?)
 
 ##########################################################################
 ##########################################################################
@@ -35,17 +35,20 @@ deploy:folder
 	$(COPY) "$(FOLDER)\*.*" "$(HOSTFS)\$(FOLDER)\*.*"
 
 .PHONY:folder
-folder: code music text
+folder: loader music text
 	$(RM_RF) $(FOLDER)
 	$(MKDIR_P) $(FOLDER)
 	$(COPY) .\folder\*.* "$(FOLDER)\*.*"
 	$(COPY) .\build\!run.txt "$(FOLDER)\!Run,feb"
-	$(COPY) .\build\arc-django.bin "$(FOLDER)\!RunImage,ff8"
 	$(COPY) .\build\icon.bin "$(FOLDER)\!Sprites,ff9"
 	$(COPY) .\build\django01.txt "$(FOLDER)\!Readme"
+	$(COPY) .\build\loader.bin "$(FOLDER)\!RunImage,ff8"
 
-.PHONY:code
-code: assets music
+.PHONY:loader
+loader: ./build/arc-django.lz4
+	$(VASM) -L loader.txt -m250 -Fbin -opt-adr -o build\loader.bin src/loader.asm
+
+./build/arc-django.bin: arc-django.asm assets music
 	$(MKDIR_P) "./build"
 	$(VASM) -L compile.txt -m250 -Fbin -opt-adr -o build\arc-django.bin arc-django.asm
 
@@ -74,6 +77,8 @@ clean:
 
 ##########################################################################
 ##########################################################################
+
+./build/arc-django.lz4: ./build/arc-django.bin
 
 # TODO: Figure out how to not need to make the build dir for every target.
 ./build/logo.lz4: ./build/logo.bin

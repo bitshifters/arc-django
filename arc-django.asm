@@ -191,10 +191,6 @@ main:
 
 	; Menu Screen.
 
-	; Set palette.
-	adrl r2, logo_pal_block
-	bl palette_set_block
-
 	; Draw logo.
 	ldr r12, screen_addr
 	adrl r9, logo_data
@@ -203,6 +199,11 @@ main:
 	; Draw menu to screen.
 	bl plot_dividers
 	bl plot_menu
+	bl scroller_init
+
+	; Set palette (shows screen).
+	adrl r2, logo_pal_block
+	bl palette_set_block
 
 	; Start with song #0.
 	mov r0, #0
@@ -740,10 +741,9 @@ bitshifters_pal_block:
 bitshifters_splash:
 .incbin "build/bitshifters.lz4"
 
-
+.align 4
 scroller_text_string:
-	.include "src/scrolltxt-final.asm"
-	.align 4
+.include "src/scrolltxt-final.asm"
 scroller_text_string_end:
 
 .align 4

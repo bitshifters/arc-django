@@ -16,13 +16,19 @@ scroller_delay:
     .long 0
 
 scroller_text_ptr:
-	.long scroller_text_string_end-1
+	.long 0
 
 scroller_cur_column:
 	.long 15
 
 scroller_glyph_data_ptr:
 	.long 0
+
+scroller_init:
+	adr r0, scroller_text_string_end
+	sub r0, r0, #1
+	str r0, scroller_text_ptr
+	mov pc, lr
 
 scroller_update:
     ldr r0, scroller_delay
