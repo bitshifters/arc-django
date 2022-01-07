@@ -604,6 +604,7 @@ check_autoplay:
 	ldr r1, song_ended
 	cmp r1, #0
 	moveq pc, lr
+	str r0, song_ended
 
 	ldr r0, autoplay_flag
 	cmp r0, #0
@@ -635,8 +636,6 @@ check_autoplay:
 	ldr r3, song_number
 	bl plot_menu_item
 
-	mov r0, #0
-	str r0, song_ended
 	ldr pc, [sp], #4
 
 claim_music_interrupt:

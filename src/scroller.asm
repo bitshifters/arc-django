@@ -66,7 +66,7 @@ get_next_char:
 	ldrb r0, [r10], #1
     mov r0, r0, lsl #3      ; wait value * 8 frames.
     str r0, scroller_delay
-    b .1
+    b .5
 
     .2:
     cmp r0, #Scroller_Code_Speed
@@ -86,13 +86,15 @@ get_next_char:
     b .1
 
     .4:
-	str r10, scroller_text_ptr
 	adr r9, scroller_font_data
 	sub r0, r0, #ASCII_Space	; start at ' '
 	; TODO: Multiply by constant macros.
 	add r9, r9, r0, lsl #7		; *128 bytes per glyph.
 	str r9, scroller_glyph_data_ptr
 	mov r0, #0	; cur_column
+
+	.5:
+	str r10, scroller_text_ptr
 	mov pc, lr
 
 ; r0=column
