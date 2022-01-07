@@ -6,6 +6,7 @@ VASM?=bin\vasmarm_std_win32.exe
 LZ4?=bin\lz4.exe
 PYTHON2?=C:\Dev\Python27\python.exe
 PYTHON3?=python.exe
+DOS2UNIX?=bin\dos2unix.exe
 else
 RM_RF:=rm -Rf
 MKDIR_P:=mkdir -p
@@ -13,6 +14,7 @@ COPY:=cp
 VASM?=vasmarm_std
 LZ4?=lz4
 PYTHON3?=python
+DOS2UNIX?=dos2unix
 endif
 
 PNG2ARC=./bin/png2arc.py
@@ -33,12 +35,14 @@ deploy:folder
 	$(COPY) "$(FOLDER)\*.*" "$(HOSTFS)\$(FOLDER)\*.*"
 
 .PHONY:folder
-folder: code music
+folder: code music text
 	$(RM_RF) $(FOLDER)
 	$(MKDIR_P) $(FOLDER)
 	$(COPY) .\folder\*.* "$(FOLDER)\*.*"
+	$(COPY) .\build\!run.txt "$(FOLDER)\!Run,feb"
 	$(COPY) .\build\arc-django.bin "$(FOLDER)\!RunImage,ff8"
 	$(COPY) .\build\icon.bin "$(FOLDER)\!Sprites,ff9"
+	$(COPY) .\build\django01.txt "$(FOLDER)\!Readme"
 
 .PHONY:code
 code: assets music
@@ -56,6 +60,9 @@ music: ./build/music_01.bin ./build/music_02.bin ./build/music_03.bin \
 	./build/music_04.bin ./build/music_05.bin ./build/music_06.bin \
 	./build/music_07.bin ./build/music_08.bin ./build/music_09.bin \
 	./build/music_10.bin ./build/music_11.bin
+
+.PHONY:text
+text: ./build/!run.txt ./build/django01.txt
 
 ##########################################################################
 ##########################################################################
@@ -147,6 +154,17 @@ clean:
 
 ./build/music_11.bin: ./data/music/mA2E-Concordia.mod
 	$(COPY) $(subst /,\\,$+) $(subst /,\\,$@)
+
+##########################################################################
+##########################################################################
+
+./build/!run.txt: ./data/text/!run.txt
+	$(MKDIR_P) "./build"
+	$(DOS2UNIX) -n $< $@
+
+./build/django01.txt: ./data/text/django01.nfo
+	$(MKDIR_P) "./build"
+	$(DOS2UNIX) -n $< $@
 
 ##########################################################################
 ##########################################################################
