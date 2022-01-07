@@ -63,8 +63,7 @@ update_sprites:
     cmp r0, #Notes_Max_Sprites
     bge .3
 
-    adr r2, note_sprite_data
-    add r2, r2, r0, lsl #7          ; 128 bytes per note.
+    mov r2, r0, lsl #7          ; 128 bytes per note.
 
     ; Start on the RHS.
     mov r0, #Note_Right_Edge
@@ -88,9 +87,13 @@ update_sprites:
 	ldr pc, [sp], #4
 
 
-; R0=X, R1=Y, R2=data ptr, R12=screen addr
+; R0=X, R1=Y, R2=data offset, R12=screen addr
 plot_sprite:
 	str lr, [sp, #-4]!
+
+    ; Offset from sprite base.
+    adr r3, note_sprite_data
+    add r2, r2, r3
 
     ; Calculate pixel offset.
     and r3, r0, #7          ; 8 pixels per word.
@@ -237,12 +240,12 @@ plot_sprite:
 	ldr pc, [sp], #4
 
 sprite_blocks:
-    .long Note_X_Start + 0*Note_X_Gap, note_sprite_data + 0*Note_Sprite_Bytes
-    .long Note_X_Start + 1*Note_X_Gap, note_sprite_data + 1*Note_Sprite_Bytes
-    .long Note_X_Start + 2*Note_X_Gap, note_sprite_data + 2*Note_Sprite_Bytes
-    .long Note_X_Start + 3*Note_X_Gap, note_sprite_data + 3*Note_Sprite_Bytes
-    .long Note_X_Start + 4*Note_X_Gap, note_sprite_data + 4*Note_Sprite_Bytes
-    .long Note_X_Start + 5*Note_X_Gap, note_sprite_data + 2*Note_Sprite_Bytes
+    .long Note_X_Start + 0*Note_X_Gap, 0*Note_Sprite_Bytes
+    .long Note_X_Start + 1*Note_X_Gap, 1*Note_Sprite_Bytes
+    .long Note_X_Start + 2*Note_X_Gap, 2*Note_Sprite_Bytes
+    .long Note_X_Start + 3*Note_X_Gap, 3*Note_Sprite_Bytes
+    .long Note_X_Start + 4*Note_X_Gap, 4*Note_Sprite_Bytes
+    .long Note_X_Start + 5*Note_X_Gap, 2*Note_Sprite_Bytes
 
 sinus:
     ; Could turn these into bytes but we 1/4'd the table anyway.
