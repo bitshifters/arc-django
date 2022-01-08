@@ -34,13 +34,37 @@ rasters_init:
 	str r4, [r3], #4
 	str r4, [r3], #4
 	subs r5, r5, #1
-
 	bne .1
+
 	ldmfd sp, {r0-r3}
 	swi RasterMan_SetTables
 	ldmfd sp!, {r0-r3}
 
     ; Add some actual rasters.
+
+    ; Dividers
+    ldr r7, divider_border
+    mov r5, #Horizontal_Divider_1
+    add r8, r0, r5, lsl #4
+    str r7, [r8, #0]
+    str r7, [r8, #4]
+    str r7, [r8, #8]
+    str r7, [r8, #12]
+
+    mov r5, #Horizontal_Divider_2
+    add r8, r0, r5, lsl #4
+    str r7, [r8, #0]
+    str r7, [r8, #4]
+    str r7, [r8, #8]
+    str r7, [r8, #12]
+
+    mov r5, #Horizontal_Divider_3
+    add r8, r0, r5, lsl #4
+    str r7, [r8, #0]
+    str r7, [r8, #4]
+    str r7, [r8, #8]
+    str r7, [r8, #12]
+
     ; Scroller area.
     ; Blue background gradient.
     mov r5, #247
@@ -76,8 +100,13 @@ rasters_init:
     ; Menu area.
     mov r5, #Horizontal_Divider_1+2
     ldr r6, raster_menu_background
+    ldr r7, raster_menu_border
 .4:
-    str r6, [r0, r5, lsl #4]
+    add r8, r0, r5, lsl #4
+    str r6, [r8, #0]
+    str r7, [r8, #4]
+    str r7, [r8, #8]
+    str r7, [r8, #12]
     add r5, r5, #1
     cmp r5, #Horizontal_Divider_2-2
     bne .4
@@ -100,7 +129,8 @@ rasters_init:
 
     mov pc, lr
 
-; TODO: Would this just be easier with a pre-filled table?
+divider_border:
+    .long 0x40000d99
 
 raster_purple_gradient:
     .long 0x3c000fff        ; set physical colour 15 to white.
@@ -108,8 +138,14 @@ raster_purple_gradient:
 raster_menu_background:
     .long 0x18000733        ; menu background colour.
 
+raster_menu_border:
+    .long 0x40000733
+
 raster_stave_colour:
     .long 0x00000400        ; note stave background.
+
+raster_stave_border:
+    .long 0x40000400
 
 raster_tables:
 	.long vidc_table_1 - raster_tables

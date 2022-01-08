@@ -96,11 +96,11 @@ Now have the correct assets:
 - Test all on real hardware! - DONE BUT CONFIRM BEFORE RELEASE!
 
 Last items:
-- Check earlier than RiscPC in !Run. - 
-- Removed test banners from Modules. - 
-- Fix to remove QTM_Strt glitch. - 
-- Add RasterMan_Configure. - 
-- Fix mouse control to be absolute. - NEED RASTERMAN UPDATE
+- Check earlier than RiscPC in !Run. - DONE
+- Removed test banners from Modules. - DONE
+- Fix to remove QTM_Strt glitch. - DONE
+- Add RasterMan_Configure. - DONE
+- Fix mouse control to be absolute. - DONE
 - Extend rasters into the border. - WAIT FOR RASTERMAN UPDATE
 
 Optional:
