@@ -121,7 +121,22 @@ update_menu:
 	blt .6
 
     ; Absolute Y.
-    mov r3, #MAX_SONGS
+	mov r0, #1023
+    mov r2, #MAX_SONGS+1
+	sub r1, r0, r1
+    mul r2, r1, r2
+    mov r2, r2, lsr #10
+
+	ldr r3, selection_number
+	cmp r2, r3
+	beq .6
+	bl plot_menu_item
+
+    ; Absolute Y.
+	mov r0, #1023
+    mov r3, #MAX_SONGS+1
+	ldr r1, prev_mouse_y
+	sub r1, r0, r1
     mul r3, r1, r3
     mov r3, r3, lsr #10
 	str r3, selection_number

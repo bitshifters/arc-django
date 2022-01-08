@@ -46,7 +46,7 @@
 
 .equ Glitch_Time, 12
 
-.equ Mouse_Enable, 0
+.equ Mouse_Enable, 1
 .equ Mouse_Sensitivity, 10
 
 ; ============================================================================
@@ -94,15 +94,15 @@ main:
 	mov r1, #10
 	swi OS_WriteN
 
-	; Seed RND.
-	swi OS_ReadMonotonicTime
-	str r0, rnd_seed
-
 	; Grab mouse.
 	.if Mouse_Enable
 	swi OS_Mouse
 	str r1, prev_mouse_y
 	.endif
+
+	; Seed RND.
+	swi OS_ReadMonotonicTime
+	str r0, rnd_seed
 
 	; EARLY INIT / LOAD STUFF HERE!
 
@@ -116,12 +116,9 @@ main:
 	mov r2, #-1
 	swi QTM_SoundControl
 
-	; Setting sample quality to maximum makes the tunes sound much worse!
-	; QTM default is 32us, but 48us sounds correct. I presume this is
-	; because chiptune samples are so small they cannot be interpolated
-	; in any meaningful way.
-	mov r0, #48
-	swi QTM_SetSampleSpeed
+	mov r0, #8    ;set bit 3 of music options byte = QTM retains control of sound system after Pause/Stop/Clear
+	mov r1, #8
+	SWI QTM_MusicOptions
 
 	mov r0, #VU_Bars_Effect
 	mov r1, #VU_Bars_Gravity
@@ -283,10 +280,6 @@ exit:
 	swi RasterMan_Wait
 	bl release_music_interrupt
 
-	; disable music
-	mov r0, #0
-	swi QTM_Stop
-
 	swi RasterMan_Release
 	swi RasterMan_Wait
 
@@ -294,6 +287,14 @@ exit:
 	adrl r2, logo_pal_block
 	bl palette_init_fade_to_black
 	bl fade_out
+
+	mov r0, #8	;clear bit 3 of music options byte
+	mov r1, #0
+	swi QTM_MusicOptions
+
+	; disable music
+	mov r0, #0
+	swi QTM_Clear
 
 	; Release our error handler
 	mov r0, #ErrorV
@@ -668,6 +669,9 @@ music_interrupt:
 ; ============================================================================
 ; Additional code modules
 ; ============================================================================
+
+rnd_seed:
+    .long 0x87654321
 
 screen_addr:
 	.long 0					; ptr to the current VIDC screen bank being written to.

@@ -3,6 +3,14 @@
 ; ============================================================================
 
 rasters_init:
+    ; Configure RasterMan for future compatibility.
+    mov r0, #4
+    mov r1, #0
+    mov r2, #-1
+    mov r3, #-1
+    mov r4, #-1
+    swi RasterMan_Configure
+
 	; Init tables.
 	adr r5, raster_tables
 	ldmia r5, {r0-r3}

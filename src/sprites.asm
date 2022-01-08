@@ -26,9 +26,6 @@
     EOR    \seed, \temp, \temp, LSR #20             ; (similarly involved!)
 .endm
 
-rnd_seed:
-    .long 0x87654321
-
 ; Returns rand in R0, preserves R1, R2.
 rand_slow:
     stmfd sp!, {r1-r2}

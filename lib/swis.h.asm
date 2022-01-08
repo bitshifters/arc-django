@@ -89,3 +89,4 @@
 .equ RasterMan_ScanKeyboard, 0x47e89
 .equ RasterMan_ClearKeyBuffer, 0x47e8a
 .equ RasterMan_ReadScanAddr, 0x47e8b
+.equ RasterMan_Configure, 0x47e8c
