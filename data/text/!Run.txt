@@ -8,7 +8,7 @@ RMLoad <Demo$Dir>.MemAlloc
 SCREENSIZE 80K
 RMKILL MemAlloc 
 |
-RMLOAD <Demo$Dir>.QTM146se24 { > null: }
+RMLOAD <Demo$Dir>.QTM146d_24 { > null: }
 RMLOAD <Demo$Dir>.RasterM28 { > null: }
 wimpslot -min 600k
 <Demo$Dir>.!RunImage

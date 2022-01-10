@@ -11,3 +11,5 @@ fill required by RasterMan.
 buffer for each channel at 24uS, which still allows the required 50Hz sound
 DMA buffer fill. The 4 channel limit is imposed because of RISC OS's size
 limit on the sound DMA buffer (the hardware could still do it...).
+- To avoid excessive size with 416/832 byte DMA buffers, the ARM2 unrolled DMA
+fill routines loop at 1/4 fill.
