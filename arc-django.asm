@@ -2,7 +2,7 @@
 ; arc-django - An Archimedes port of Chipo Django musicdisk by Rabenauge.
 ; ============================================================================
 
-.equ _DEBUG, 1
+.equ _DEBUG, 0
 .equ _DEBUG_RASTERS, (_DEBUG && 0)		; I don't think this works with RasterMan?
 
 .equ Screen_Banks, 1
