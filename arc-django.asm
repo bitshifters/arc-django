@@ -40,9 +40,12 @@
 .equ VU_Bars_Effect, 2	; 'effect'
 .equ VU_Bars_Gravity, 2	; lines per vsync
 
-.equ Horizontal_Divider_1, 98
+.equ Horizontal_Divider_1, 100
 .equ Horizontal_Divider_2, 202
 .equ Horizontal_Divider_3, 233
+.equ MenuArea_Top, Horizontal_Divider_1+2
+.equ MenuArea_Height, Horizontal_Divider_2-Horizontal_Divider_1-3
+.equ Stave_Top, VU_Bars_Y_Pos - VU_Bars_Gap
 
 .equ Glitch_Time, 12
 
@@ -187,6 +190,8 @@ main:
 	bl wait_frames
 
 	; Menu Screen.
+	mov r0, #12				; cls
+	SWI OS_WriteC
 
 	; Draw logo.
 	ldr r12, screen_addr
@@ -194,7 +199,6 @@ main:
 	bl plot_logo
 
 	; Draw menu to screen.
-	bl plot_dividers
 	bl plot_menu
 	bl scroller_init
 

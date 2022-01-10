@@ -40,7 +40,7 @@ small_font_colour:
     .long 15
 
 small_font_bg_word:
-    .long 0x66666666
+    .long 0x00000000        ; TODO: Remove masking code as bg fixed to colour 0.
 
 ; R10=colour no.
 small_font_get_colour_data:

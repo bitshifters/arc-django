@@ -90,3 +90,21 @@
 .equ RasterMan_ClearKeyBuffer, 0x47e8a
 .equ RasterMan_ReadScanAddr, 0x47e8b
 .equ RasterMan_Configure, 0x47e8c
+
+.equ VIDC_Col0, 0x00000000
+.equ VIDC_Col1, 0x04000000
+.equ VIDC_Col2, 0x08000000
+.equ VIDC_Col3, 0x0c000000
+.equ VIDC_Col4, 0x10000000
+.equ VIDC_Col5, 0x14000000
+.equ VIDC_Col6, 0x18000000
+.equ VIDC_Col7, 0x1c000000
+.equ VIDC_Col8, 0x20000000
+.equ VIDC_Col9, 0x24000000
+.equ VIDC_Col10, 0x28000000
+.equ VIDC_Col11, 0x2c000000
+.equ VIDC_Col12, 0x30000000
+.equ VIDC_Col13, 0x34000000
+.equ VIDC_Col14, 0x38000000
+.equ VIDC_Col15, 0x3c000000
+.equ VIDC_Border, 0x40000000
