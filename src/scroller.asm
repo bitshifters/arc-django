@@ -50,6 +50,11 @@ scroller_update:
 	blge get_next_char
 	str r0, scroller_cur_column
 
+	; hit a delay so no scroll.
+	ldr r2, scroller_delay
+	cmp r2, #0
+	ldrne pc, [sp], #4
+
 	; next glyph word?
 	ands r1, r0, #7		; 8 pixels per word
 
@@ -68,10 +73,11 @@ get_next_char:
     cmp r0, #Scroller_Code_Wait
     bne .2
 
-    ; Next byte is second?
+    ; Next byte is time.
 	ldrb r0, [r10], #1
     mov r0, r0, lsl #3      ; wait value * 8 frames.
     str r0, scroller_delay
+	mov r0, #Scroller_Glyph_Width		; scroller_cur_column
     b .5
 
     .2:

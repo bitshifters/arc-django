@@ -101,7 +101,7 @@ Last items:
 - Fix to remove QTM_Strt glitch. - DONE
 - Add RasterMan_Configure. - DONE
 - Fix mouse control to be absolute. - DONE
-- Extend rasters into the border. - WAIT FOR RASTERMAN UPDATE
+- Extend rasters into the border. - DONE
 
 Optional:
 - Remove stack from exe? Move BSS to separate segment?
