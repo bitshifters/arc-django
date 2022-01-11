@@ -150,12 +150,6 @@ main:
 	mov r1, #1
 	str r1, scr_bank
 
-	; Claim the Error vector.
-	MOV r0, #ErrorV
-	ADR r1, error_handler
-	MOV r2, #0
-	SWI OS_Claim
-
 	; LATE INITALISATION HERE!
 	bl get_screen_addr
 
@@ -176,11 +170,12 @@ main:
 	adr r0, bitshifters_splash
 	ldr r1, screen_addr
 	bl unlz4
+
 	adrl r2, bitshifters_pal_block
 	bl palette_init_fade_to_black
 	bl palette_set_block
 	; Pause.
-	mov r4, #Splash_Frames
+	mov r4, #Splash_Frames/2
 	bl wait_frames
 	; Fade.
 	bl fade_out
@@ -205,6 +200,12 @@ main:
 	; Set palette (shows screen).
 	adrl r2, logo_pal_block
 	bl palette_set_block
+
+	; Claim the Error vector.
+	MOV r0, #ErrorV
+	ADR r1, error_handler
+	MOV r2, #0
+	SWI OS_Claim
 
 	; Start with song #0.
 	mov r0, #0
@@ -346,8 +347,8 @@ fade_out:
 debug_print_r0:
 	stmfd sp!, {r0-r2}
 	adr r1, debug_string
-	mov r2, #8
-	swi OS_ConvertHex4
+	mov r2, #10
+	swi OS_ConvertHex4	; or OS_ConvertHex8
 	adr r0, debug_string
 	swi OS_WriteO
 	ldmfd sp!, {r0-r2}
@@ -415,7 +416,7 @@ debug_write_vsync_count:
 	ldr pc, [sp], #4
 
 debug_string:
-	.skip 8
+	.skip 10
 .endif
 
 ; ============================================================================
