@@ -41,7 +41,7 @@ folder: loader music text
 	$(COPY) .\folder\*.* "$(FOLDER)\*.*"
 	$(COPY) .\build\!run.txt "$(FOLDER)\!Run,feb"
 	$(COPY) .\build\icon.bin "$(FOLDER)\!Sprites,ff9"
-	$(COPY) .\build\django01.txt "$(FOLDER)\!Readme"
+	$(COPY) .\build\django01.txt "$(FOLDER)\!Help"
 	$(COPY) .\build\loader.bin "$(FOLDER)\!RunImage,ff8"
 
 .PHONY:loader
