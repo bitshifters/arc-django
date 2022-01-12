@@ -166,20 +166,6 @@ main:
 	; Fade.
 	bl fade_out
 
-	; Bitshifters.
-	adr r0, bitshifters_splash
-	ldr r1, screen_addr
-	bl unlz4
-
-	adrl r2, bitshifters_pal_block
-	bl palette_init_fade_to_black
-	bl palette_set_block
-	; Pause.
-	mov r4, #Splash_Frames/2
-	bl wait_frames
-	; Fade.
-	bl fade_out
-
 	; Pause.
 	mov r4, #Menu_Beat_Frames
 	bl wait_frames
@@ -289,6 +275,7 @@ exit:
 	swi RasterMan_Wait
 
 	; Fade out.
+	; TODO: Fade volume down?
 	adrl r2, logo_pal_block
 	bl palette_init_fade_to_black
 	bl fade_out
@@ -307,13 +294,23 @@ exit:
 	mov r2, #0
 	swi OS_Release
 
-	; Clear screen.
-	mov r0, #12
-	SWI OS_WriteC
-	MOV r0,#22	;Set MODE
-	SWI OS_WriteC
-	MOV r0,#Screen_Mode
-	SWI OS_WriteC
+	; Pause.
+	mov r4, #Menu_Beat_Frames
+	bl wait_frames
+
+	; Bitshifters.
+	adr r0, bitshifters_splash
+	ldr r1, screen_addr
+	bl unlz4
+
+	adrl r2, bitshifters_pal_block
+	bl palette_init_fade_from_black
+	; Fade.
+	bl fade_in
+
+	; Pause.
+	mov r4, #Menu_Beat_Frames
+	bl wait_frames
 
 	; Flush keyboard buffer.
 	mov r0, #15
@@ -336,6 +333,16 @@ fade_out:
 	bl wait_frames
 	bl palette_update_fade_to_black
 	cmp r0, #0
+	bne .1
+	ldr pc, [sp], #4
+
+fade_in:
+	str lr, [sp, #-4]!
+	.1:
+	mov r4, #Fade_Speed
+	bl wait_frames
+	bl palette_update_fade_from_black
+	cmp r0, #16
 	bne .1
 	ldr pc, [sp], #4
 

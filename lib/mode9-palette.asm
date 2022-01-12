@@ -77,6 +77,31 @@ palette_update_fade_to_black:
     str r0, palette_interp
 	ldr pc, [sp], #4			; rts
 
+; R2 = source palette block ptr
+palette_init_fade_from_black:
+    str r2, palette_source
+    mov r0, #0
+    str r0, palette_interp
+    mov pc, lr
+
+; Returns interp value in R0.
+palette_update_fade_from_black:
+   	str lr, [sp, #-4]!			; push lr on stack
+    ldr r0, palette_interp
+    cmp r0, #16
+	ldrge pc, [sp], #4			; rts
+
+    ldr r2, palette_source
+    bl palette_make_fade_to_black
+
+    adr r2, palette_interp_block
+    bl palette_set_block
+
+    ldr r0, palette_interp
+    adds r0, r0, #1
+    str r0, palette_interp
+	ldr pc, [sp], #4			; rts
+
 palette_source:
     .long 0
 
