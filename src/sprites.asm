@@ -18,14 +18,6 @@
 .equ Notes_Max_Sprites, 5
 .equ Note_Sprite_Bytes, 128
 
-.macro RND seed, bit, temp
-    TST    \bit, \bit, LSR #1                       ; top bit into Carry
-    MOVS   \temp, \seed, RRX                        ; 33 bit rotate right
-    ADC    \bit, \bit, \bit                         ; carry into lsb of R1
-    EOR    \temp, \temp, \seed, LSL #12             ; (involved!)
-    EOR    \seed, \temp, \temp, LSR #20             ; (similarly involved!)
-.endm
-
 ; Returns rand in R0, preserves R1, R2.
 rand_slow:
     stmfd sp!, {r1-r2}

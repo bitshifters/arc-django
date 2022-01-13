@@ -18,6 +18,18 @@
 .include "lib/swis.h.asm"
 
 ; ============================================================================
+; Macros.
+; ============================================================================
+
+.macro RND seed, bit, temp
+    TST    \bit, \bit, LSR #1                       ; top bit into Carry
+    MOVS   \temp, \seed, RRX                        ; 33 bit rotate right
+    ADC    \bit, \bit, \bit                         ; carry into lsb of R1
+    EOR    \temp, \temp, \seed, LSL #12             ; (involved!)
+    EOR    \seed, \temp, \temp, LSR #20             ; (similarly involved!)
+.endm
+
+; ============================================================================
 ; App defines
 ; ============================================================================
 
@@ -51,6 +63,8 @@
 
 .equ Mouse_Enable, 1
 .equ Mouse_Sensitivity, 10
+
+.equ AutoPlay_Default, MAX_SONGS
 
 ; ============================================================================
 ; Code Start
@@ -278,7 +292,7 @@ exit:
 	; TODO: Fade volume down?
 	adrl r2, logo_pal_block
 	bl palette_init_fade_to_black
-	bl fade_out
+	bl fade_out_with_volume
 
 	mov r0, #8	;clear bit 3 of music options byte
 	mov r1, #0
@@ -309,7 +323,7 @@ exit:
 	bl fade_in
 
 	; Pause.
-	mov r4, #Menu_Beat_Frames
+	mov r4, #Menu_Beat_Frames*2
 	bl wait_frames
 
 	; Flush keyboard buffer.
@@ -333,6 +347,28 @@ fade_out:
 	bl wait_frames
 	bl palette_update_fade_to_black
 	cmp r0, #0
+	bne .1
+	ldr pc, [sp], #4
+
+fade_out_with_volume:
+	str lr, [sp, #-4]!
+	mov r7, #64
+	.1:
+	mov r4, #1
+	bl wait_frames
+	
+	; Volume.
+	mov r0, r7
+	swi QTM_Volume
+
+	; Palette.
+    ldr r2, palette_source
+	mov r0, r7, lsr #2
+    bl palette_make_fade_to_black
+    adr r2, palette_interp_block
+    bl palette_set_block
+
+	subs r7, r7, #1
 	bne .1
 	ldr pc, [sp], #4
 
@@ -567,7 +603,7 @@ song_number:
 	.long -1
 
 autoplay_flag:
-	.long 0		; set to MAX_SONGS when enabled.
+	.long AutoPlay_Default		; set to MAX_SONGS when enabled.
 
 song_ended:
 	.long 0
@@ -688,14 +724,14 @@ rnd_seed:
 screen_addr:
 	.long 0					; ptr to the current VIDC screen bank being written to.
 
+.include "lib/mode9-palette.asm"
+.include "src/logo.asm"
 .include "src/menu.asm"
 .include "src/vubars.asm"
 .include "src/scroller.asm"
 .include "src/small-font.asm"
 .include "src/sprites.asm"
-.include "src/logo.asm"
 .include "src/rasters.asm"
-.include "lib/mode9-palette.asm"
 .include "lib/lz4-decode.asm"
 
 ; ============================================================================
