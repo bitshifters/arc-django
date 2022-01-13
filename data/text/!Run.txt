@@ -16,9 +16,8 @@ RMASIZE 0K
 SCREENSIZE 40K
 RMKILL MemAlloc 
 |
-If "<CPU$Type>"="ARM2" Then RMLOAD <Demo$Dir>.QTM146d_48 { > null: }
-If "<CPU$Type>"<>"ARM2" Then RMLOAD <Demo$Dir>.QTM146d_24 { > null: }
-RMLOAD <Demo$Dir>.RasterM28 { > null: }
+RMLOAD <Demo$Dir>.QTM146d_24 { > null: }
+RMLOAD <Demo$Dir>.RasterM29 { > null: }
 |
 wimpslot -min 586K
 <Demo$Dir>.!RunImage
