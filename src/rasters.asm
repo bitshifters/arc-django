@@ -68,11 +68,11 @@ raster_list:
     .long Horizontal_Divider_1,                             VIDC_Col0 | 0xd99,  VIDC_Border | 0xd99, VIDC_Border | 0xd99, VIDC_Border | 0xd99       ; divider 1
     .long MenuArea_Height << 8 | MenuArea_Top,              VIDC_Col0 | 0x733,  VIDC_Border | 0x733, VIDC_Border | 0x733, VIDC_Border | 0x733       ; menu area
     .long Horizontal_Divider_2,                             VIDC_Col0 | 0xd99,  VIDC_Border | 0xd99, VIDC_Border | 0xd99, VIDC_Border | 0xd99       ; divider 2
-    .long VU_Bars_Height << 8 | Stave_Top,                  VIDC_Col0 | 0x400,  VIDC_Border | 0x400, VIDC_Border | 0x400, VIDC_Border | 0x400       ; stave 1
-    .long VU_Bars_Height << 8 | Stave_Top + 1*VU_Bars_Gap,  VIDC_Col0 | 0x400,  VIDC_Border | 0x400, VIDC_Border | 0x400, VIDC_Border | 0x400       ; stave 2
-    .long VU_Bars_Height << 8 | Stave_Top + 2*VU_Bars_Gap,  VIDC_Col0 | 0x400,  VIDC_Border | 0x400, VIDC_Border | 0x400, VIDC_Border | 0x400       ; stave 3
-    .long VU_Bars_Height << 8 | Stave_Top + 3*VU_Bars_Gap,  VIDC_Col0 | 0x400,  VIDC_Border | 0x400, VIDC_Border | 0x400, VIDC_Border | 0x400       ; stave 4
-    .long VU_Bars_Height << 8 | Stave_Top + 4*VU_Bars_Gap,  VIDC_Col0 | 0x400,  VIDC_Border | 0x400, VIDC_Border | 0x400, VIDC_Border | 0x400       ; stave 5
+    .long VU_Bars_Height << 8 | Stave_Top,                  VIDC_Col0 | 0x300,  VIDC_Border | 0x300, VIDC_Border | 0x300, VIDC_Border | 0x300       ; stave 1
+    .long VU_Bars_Height << 8 | Stave_Top + 1*VU_Bars_Gap,  VIDC_Col0 | 0x300,  VIDC_Border | 0x300, VIDC_Border | 0x300, VIDC_Border | 0x300       ; stave 2
+    .long VU_Bars_Height << 8 | Stave_Top + 2*VU_Bars_Gap,  VIDC_Col0 | 0x300,  VIDC_Border | 0x300, VIDC_Border | 0x300, VIDC_Border | 0x300       ; stave 3
+    .long VU_Bars_Height << 8 | Stave_Top + 3*VU_Bars_Gap,  VIDC_Col0 | 0x300,  VIDC_Border | 0x300, VIDC_Border | 0x300, VIDC_Border | 0x300       ; stave 4
+    .long VU_Bars_Height << 8 | Stave_Top + 4*VU_Bars_Gap,  VIDC_Col0 | 0x300,  VIDC_Border | 0x300, VIDC_Border | 0x300, VIDC_Border | 0x300       ; stave 5
     .long Horizontal_Divider_3,                             VIDC_Col0 | 0xd99,  VIDC_Border | 0xd99, VIDC_Border | 0xd99, VIDC_Border | 0xd99       ; divider 3
 
     ; Scroller area. Assume Scroller_Y_Pos == 237.

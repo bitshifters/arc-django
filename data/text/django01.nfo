@@ -150,8 +150,16 @@ Special thanks to Bodo for supplying all of the Amiga assets for the
 conversion and to Phoneix for making brand new versions of QTM and
 Rasterman just for this release!
 
+Run on real Archimedes hardware with RISC OS 3.1 or 2, or if running
+under emulation, use Arculator v2.1. For best emulated experience,
+emulate an A3010 and select sound output filter -> more reduced.
+
+For best audio quality on real Archimedes hardware we recommend
+removing the hardware low-pass filter by following the instructions
+on this thread: stardot.org.uk/forums/viewtopic.php?f=16&t=13630.
+
 Contact us and find more Acorn demo prods at bitshifters.github.io.
-Find QTM and Rasterman at pi-star.co.uk.
+Find QTM and Rasterman at www.pi-star.co.uk.
 
   - - ----------------------- -bitshifters- --------------------- - -
 

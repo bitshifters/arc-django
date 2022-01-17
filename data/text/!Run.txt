@@ -21,3 +21,6 @@ RMLOAD <Demo$Dir>.RasterM29 { > null: }
 |
 wimpslot -min 586K
 <Demo$Dir>.!RunImage
+|
+RMKILL RasterMan
+RMKILL QTMTracker
