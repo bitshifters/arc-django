@@ -35,7 +35,7 @@ deploy:folder
 	$(COPY) "$(FOLDER)\*.*" "$(HOSTFS)\$(FOLDER)\*.*"
 
 .PHONY:folder
-folder: loader music text
+folder: build loader music text
 	$(RM_RF) $(FOLDER)
 	$(MKDIR_P) $(FOLDER)
 	$(COPY) .\folder\*.* "$(FOLDER)\*.*"
@@ -45,27 +45,29 @@ folder: loader music text
 	$(COPY) .\build\loader.bin "$(FOLDER)\!RunImage,ff8"
 
 .PHONY:loader
-loader: ./build/arc-django.lz4
+loader: build ./build/arc-django.lz4
 	$(VASM) -L loader.txt -m250 -Fbin -opt-adr -o build\loader.bin src/loader.asm
 
-./build/arc-django.bin: arc-django.asm assets music
-	$(MKDIR_P) "./build"
+./build/arc-django.bin: build arc-django.asm assets music
 	$(VASM) -L compile.txt -m250 -Fbin -opt-adr -o build\arc-django.bin arc-django.asm
 
 .PHONY:assets
-assets: ./build/logo.lz4 ./build/logo.bin.pal ./build/scroller_font.bin \
+assets: build ./build/logo.lz4 ./build/logo.bin.pal ./build/scroller_font.bin \
 	./build/note1.bin ./build/note2.bin ./build/note3.bin ./build/note4.bin \
 	./build/note5.bin ./build/icon.bin ./build/rabenauge.lz4 ./build/rabenauge.bin.pal \
 	./build/bitshifters.lz4 ./build/bitshifters.bin.pal
 
 .PHONY:music
-music: ./build/music_01.bin ./build/music_02.bin ./build/music_03.bin \
+music: build ./build/music_01.bin ./build/music_02.bin ./build/music_03.bin \
 	./build/music_04.bin ./build/music_05.bin ./build/music_06.bin \
 	./build/music_07.bin ./build/music_08.bin ./build/music_09.bin \
 	./build/music_10.bin ./build/music_11.bin
 
-.PHONY:text
+.PHONY:text build
 text: ./build/!run.txt ./build/django01.txt
+
+build:
+	$(MKDIR_P) "./build"
 
 ##########################################################################
 ##########################################################################
@@ -83,45 +85,35 @@ clean:
 # TODO: Figure out how to not need to make the build dir for every target.
 ./build/logo.lz4: ./build/logo.bin
 ./build/logo.bin: ./data/gfx/chipoDjango3.png $(PNG2ARC_DEPS)
-	$(MKDIR_P) "./build"
 	$(PYTHON2) $(PNG2ARC) -o $@ -p $@.pal $< 9
 
 ./build/scroller_font.bin: ./data/font/font3.png $(PNG2ARC_DEPS)
-	$(MKDIR_P) "./build"
 	$(PYTHON2) $(PNG2ARC_FONT) -o $@ --glyph-dim 16 16 --max-glyphs 59 $< 9
 
 ./build/note1.bin: ./data/gfx/note1.png ./build/logo.bin $(PNG2ARC_DEPS)
-	$(MKDIR_P) "./build"
 	$(PYTHON2) $(PNG2ARC_FONT) -o $@ --glyph-dim 16 16 --max-glyphs 1 --use-palette ./build/logo.bin.pal --closest-match $< 9
 
 ./build/note2.bin: ./data/gfx/note2.png $(PNG2ARC_DEPS)
-	$(MKDIR_P) "./build"
 	$(PYTHON2) $(PNG2ARC_FONT) -o $@ --glyph-dim 16 16 --max-glyphs 1 --use-palette ./build/logo.bin.pal --closest-match $< 9
 
 ./build/note3.bin: ./data/gfx/note3.png $(PNG2ARC_DEPS)
-	$(MKDIR_P) "./build"
 	$(PYTHON2) $(PNG2ARC_FONT) -o $@ --glyph-dim 16 16 --max-glyphs 1 --use-palette ./build/logo.bin.pal --closest-match $< 9
 
 ./build/note4.bin: ./data/gfx/note4.png $(PNG2ARC_DEPS)
-	$(MKDIR_P) "./build"
 	$(PYTHON2) $(PNG2ARC_FONT) -o $@ --glyph-dim 16 16 --max-glyphs 1 --use-palette ./build/logo.bin.pal --closest-match $< 9
 
 ./build/note5.bin: ./data/gfx/note5.png $(PNG2ARC_DEPS)
-	$(MKDIR_P) "./build"
 	$(PYTHON2) $(PNG2ARC_FONT) -o $@ --glyph-dim 16 16 --max-glyphs 1 --use-palette ./build/logo.bin.pal --closest-match $< 9
 
 ./build/icon.bin: ./data/gfx/icon.png $(PNG2ARC_DEPS)
-	$(MKDIR_P) "./build"
 	$(PYTHON2) $(PNG2ARC_SPRITE) --name !django01 -o $@ $< 9
 
 ./build/rabenauge.lz4: ./build/rabenauge.bin
 ./build/rabenauge.bin: ./data/gfx/rabenauge-logo4.png $(PNG2ARC_DEPS)
-	$(MKDIR_P) "./build"
 	$(PYTHON2) $(PNG2ARC) -o $@ -p $@.pal $< 9
 
 ./build/bitshifters.lz4: ./build/bitshifters.bin
 ./build/bitshifters.bin: ./data/gfx/logo_flatplane04.png $(PNG2ARC_DEPS)
-	$(MKDIR_P) "./build"
 	$(PYTHON2) $(PNG2ARC) -o $@ -p $@.pal $< 9
 
 ##########################################################################
@@ -164,11 +156,9 @@ clean:
 ##########################################################################
 
 ./build/!run.txt: ./data/text/!run.txt
-	$(MKDIR_P) "./build"
 	$(DOS2UNIX) -n $< $@
 
 ./build/django01.txt: ./data/text/django01.nfo
-	$(MKDIR_P) "./build"
 	$(DOS2UNIX) -n $< $@
 
 ##########################################################################
@@ -176,17 +166,14 @@ clean:
 
 # Rule to convert PNG files, assumes MODE 9.
 %.bin : %.png $(PNG2ARC_DEPS)
-	$(MKDIR_P) "./build"
 	$(PYTHON2) $(PNG2ARC) -o $@ -p $@.pal $< 9
 
 # Rule to LZ4 compress bin files.
 %.lz4 : %.bin
-	$(MKDIR_P) "./build"
 	$(LZ4) --best -f $< $@
 
 # Rule to copy MOD files.
 %.bin : %.mod
-	$(MKDIR_P) "./build"
 	$(COPY) $(subst /,\\,$+) $(subst /,\\,$@)
 
 ##########################################################################
