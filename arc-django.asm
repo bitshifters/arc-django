@@ -65,6 +65,7 @@
 .equ Mouse_Sensitivity, 10
 
 .equ AutoPlay_Default, MAX_SONGS
+.equ Stereo_Positions, 1		; Amiga (full) stereo positions.
 
 ; ============================================================================
 ; Code Start
@@ -140,6 +141,10 @@ main:
 	mov r0, #VU_Bars_Effect
 	mov r1, #VU_Bars_Gravity
 	swi QTM_VUBarControl
+
+	mov r0, #0
+	mov r1, #Stereo_Positions
+	swi QTM_Stereo
 
 	; QTM callback.
 	bl claim_music_interrupt

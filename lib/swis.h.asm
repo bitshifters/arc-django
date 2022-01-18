@@ -69,6 +69,7 @@
 .equ QTM_Pos, 0x47E46
 .equ QTM_Volume, 0x47E48
 .equ QTM_SetSampleSpeed, 0x47E49
+.equ QTM_Stereo, 0x47E4D
 .equ QTM_VUBarControl, 0x47E50
 .equ QTM_ReadVULevels, 0x47E51
 .equ QTM_SoundControl, 0x47E58

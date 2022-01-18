@@ -1,4 +1,4 @@
-SWI list and API information for QTM v1.46alpha  © Steve Harrison, 1993-2022
+SWI list and API information for QTM v1.46c      © Steve Harrison, 1993-2022
 ----------------------------------------------------------------------------
 
 The QTMTracker module contains a full application programming interface (API)
