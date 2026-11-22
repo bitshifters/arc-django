@@ -20,7 +20,7 @@ An Acorn Archimedes port of the Chipo Django musicdisk (Rabenauge, Deadline 2021
 
 - `make`: builds the `!Django01` folder in the repo (`make.bat folder`). Works (2026-11-22), using converted assets already in `build\`.
 - `make deploy`: make.bat's default, also copies `!Django01` to the hostfs; `make help`.
-- Asset conversion in `Makefile.mk` uses Python 2.7 at `C:\Dev\Python27\python.exe` (missing here): a clean build or changed PNGs will fail.
+- Asset conversion: the `bin\*.py` converters were ported to Python 3 on 2026-11-22 and give byte-identical output. `make.bat` sets `PYTHON2=py -3` unless already set, because `Makefile.mk` (which has an uncommitted local edit) still defaults `PYTHON2` to `C:\Dev\Python27\python.exe`.
 - Run `!Django01` in Arculator (`D:\archie\mine\arculator`).
 
 ## Local changes
