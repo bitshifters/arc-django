@@ -12,5 +12,5 @@ deploy:
 
 help:
 	@echo make         - build the !Django01 RISC OS folder in the repo (make.bat folder)
-	@echo make deploy  - build and copy !Django01 to ..\arculator\hostfs (make.bat's default)
+	@echo make deploy  - build and copy !Django01 to ..\arculator\hostfs\Builds (make.bat's default)
 	@echo make help    - this list
