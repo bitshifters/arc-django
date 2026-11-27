@@ -34,4 +34,4 @@ An Acorn Archimedes port of the Chipo Django musicdisk (Rabenauge, Deadline 2021
 
 ## See also
 
-- `README.md`; `D:\archie\mine\arc-django-2` (the sequel), `D:\archie\mine\archie-verse` (Chipo Django 3 on branch wip/chipo-django3).
+- `README.md`; `D:\bitshifters\arc-django-2` (the sequel), `D:\archie\mine\archie-verse` (Chipo Django 3 on branch wip/chipo-django3).
