@@ -4,9 +4,9 @@ An Acorn Archimedes port of the Chipo Django musicdisk (Rabenauge, Deadline 2021
 
 | | |
 |---|---|
-| GitHub | https://github.com/kieranhj/arc-django (private) |
+| GitHub | https://github.com/bitshifters/arc-django (public; transferred from kieranhj/arc-django on 2026-11-27, old URL redirects) |
 | Upstream | port of the Amiga musicdisk by Rabenauge (assets in `from_bodo/`, `data/`) |
-| Local path | D:\archie\mine\arc-django (moved from OneDrive\Archie\Repos\arc-django on 2026-11-22) |
+| Local path | D:\bitshifters\arc-django (moved from D:\archie\mine on 2026-11-27; before that OneDrive\Archie\Repos) |
 | Branch | main; other branches: rasterman (same commit as main), autoplay-no-rasterman (3 commits not in main, 2022-01-03), wip/2026-11-tidy |
 | Last commit | 2022-01-18: Remove individual build targets. |
 
